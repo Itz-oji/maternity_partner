@@ -1,0 +1,33 @@
+/* Nombre y Apellido en una línea */
+.page.cliente .field-group {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 640px) {
+  .page.cliente .field-group {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Teléfono con prefijo fijo */
+.page.cliente .phone-field {
+  display: flex;
+  align-items: center;
+}
+
+.page.cliente .phone-prefix {
+  padding: 11px 12px;
+  background: #e6eef6;
+  border: 1px solid #9db6d0;
+  border-right: none;
+  border-radius: 10px 0 0 10px;
+  font-weight: 700;
+  color: #0f4d63;
+}
+
+.page.cliente .phone-field input {
+  flex: 1;
+  border-radius: 0 10px 10px 0;
+}

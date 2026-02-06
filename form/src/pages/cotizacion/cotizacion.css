@@ -1,0 +1,50 @@
+.page.cotizacion .radio-group{
+  margin: 14px 0 22px;
+}
+
+.page.cotizacion .radio-group legend{
+  font-size: 22px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.page.cotizacion .radio-item{
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 10px;
+  border-radius: 12px;
+  cursor: pointer;
+  user-select: none;
+  font-weight: 400;
+}
+
+.page.cotizacion .radio-item {
+  background: rgba(255,255,255,0.55);
+  border-radius: 14px;
+  padding: 16px 18px;
+  margin-top: 16px;
+}
+
+/* Radio más grande */
+.page.cotizacion .radio-item input[type="radio"]{
+  width: 20px;
+  height: 20px;
+  accent-color: #2e69ff;
+}
+
+/* Hover suave */
+.page.cotizacion .radio-item:hover{
+  background: rgba(46,105,255,0.06);
+}
+
+/* Seleccionado (usando class selected como en grupo-familiar) */
+.page.cotizacion .radio-item.selected{
+  background: rgba(46,105,255,0.10);
+  outline: 2px solid rgba(46,105,255,0.25);
+}
+
+/* Texto normal */
+.page.cotizacion .radio-item span{
+  font-weight: 400;
+}

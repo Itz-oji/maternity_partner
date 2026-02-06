@@ -1,0 +1,191 @@
+<section class="page cotizacion">
+  <h2>Ubicación del cuidado</h2>
+  <p class="hint">Información para coordinar el servicio.</p>
+
+  <div class="panel">
+    <label for="comuna">Comuna de Santiago donde se realizará el cuidado. <span class="req">*</span></label>
+    <select id="comuna">
+      <option value="">Selecciona una comuna</option>
+      <option>Cerrillos</option>
+      <option>Cerro Navia</option>
+      <option>Conchalí</option>
+      <option>El Bosque</option>
+      <option>Estación Central</option>
+      <option>Huechuraba</option>
+      <option>Independencia</option>
+      <option>La Cisterna</option>
+      <option>La Florida</option>
+      <option>La Granja</option>
+      <option>La Pintana</option>
+      <option>La Reina</option>
+      <option>Las Condes</option>
+      <option>Lo Barnechea</option>
+      <option>Lo Espejo</option>
+      <option>Lo Prado</option>
+      <option>Macul</option>
+      <option>Maipú</option>
+      <option>Ñuñoa</option>
+      <option>Pedro Aguirre Cerda</option>
+      <option>Peñalolén</option>
+      <option>Providencia</option>
+      <option>Pudahuel</option>
+      <option>Quilicura</option>
+      <option>Quinta Normal</option>
+      <option>Recoleta</option>
+      <option>Renca</option>
+      <option>San Joaquín</option>
+      <option>San Miguel</option>
+      <option>San Ramón</option>
+      <option>Santiago</option>
+      <option>Vitacura</option>
+      <option>Comuna dentro de la Región Metropolitana</option>
+    </select>
+  </div>
+
+  <div class="field">
+    <label for="direccion">Dirección donde se realizará el cuidado (calle, número, casa/dpto). <span class="req">*</span></label>
+    <input id="direccion" type="text" placeholder="Dirección del domicilio" />
+  </div>
+
+  <fieldset class="radio-group">
+    <legend>¿Qué tan cerca está tu dirección del transporte público?</legend>
+
+    <label class="radio-item">
+        <input type="radio" name="transporte" value="menos_10" />
+        <span>Menos de 10 minutos caminando</span>
+    </label>
+
+    <label class="radio-item">
+        <input type="radio" name="transporte" value="10_15" />
+        <span>10-15 minutos caminando</span>
+    </label>
+
+    <label class="radio-item">
+        <input type="radio" name="transporte" value="mas_15" />
+        <span>Más de 15 minutos caminando</span>
+    </label>
+  </fieldset>
+
+  <!-- TIPO DE SERVICIO -->
+    <div class="panel">
+        <label class="panel-title">Tipo de servicio</label>
+
+        <fieldset class="radio-group">
+            <label class="radio-item">
+            <input type="radio" name="tipoServicio" value="ocasional" />
+            <span>Ocasional (fechas puntuales)</span>
+            </label>
+
+            <label class="radio-item">
+            <input type="radio" name="tipoServicio" value="periodico" />
+            <span>Periódico (esquema semanal que se repite)</span>
+            </label>
+        </fieldset>
+    </div>
+
+    <!-- FECHA -->
+    <div class="field">
+    <label for="fechaInicio">¿En qué fecha deseas partir? <span class="req">*</span></label>
+    <input id="fechaInicio" type="date" />
+    <small class="helper">Fecha</small>
+    </div>
+
+    <!-- TURNO ADAPTATIVO -->
+    <fieldset class="radio-group">
+    <legend>
+        ¿Desea un turno adaptativo? Un turno de adaptación consiste en una jornada inicial
+        de cuidado para que tu hijo/a y la cuidadora se conozcan, se genere confianza y
+        podamos acompañar el proceso de forma respetuosa ♡
+    </legend>
+
+    <label class="radio-item">
+        <input type="radio" name="turnoAdaptativo" value="si" />
+        <span>Si</span>
+    </label>
+
+    <label class="radio-item">
+        <input type="radio" name="turnoAdaptativo" value="no" />
+        <span>No</span>
+    </label>
+    </fieldset>
+    <div class="field" id="fechaAdaptativaWrap" style="display:none;">
+        <label for="fechaAdaptativa">
+            Fecha del turno adaptativo <span class="req">*</span>
+        </label>
+        <input id="fechaAdaptativa" type="date" />
+    </div>
+
+
+    <!-- SOLO si es Periódico -->
+    <div class="field" id="diasWrap" style="display:none;">
+        <label for="diasSemana">Cantidad de días a la semana <span class="req">*</span></label>
+        <select id="diasSemana">
+            <option value="">Selecciona</option>
+            <option value="1">1 día</option>
+            <option value="2">2 días</option>
+            <option value="3">3 días</option>
+            <option value="4">4 días</option>
+            <option value="5">5 días</option>
+            <option value="6">6 días</option>
+            <option value="7">7 días</option>
+        </select>
+    </div>
+
+    <div id="diasHorariosWrap" class="dias-horarios-wrap"></div>
+
+    <template id="diaRowTemplate">
+        <div class="dia-row">
+            <div class="col">
+            <label class="js-dia-label">Día 1</label>
+            <select class="select js-dia">
+                <option value="">Seleccione</option>
+                <option value="lunes">Lunes</option>
+                <option value="martes">Martes</option>
+                <option value="miercoles">Miércoles</option>
+                <option value="jueves">Jueves</option>
+                <option value="viernes">Viernes</option>
+                <option value="sabado">Sábado</option>
+                <option value="domingo">Domingo</option>
+            </select>
+            </div>
+
+            <div class="col">
+            <label>Hora inicio</label>
+            <input class="input js-inicio" type="time" />
+            </div>
+
+            <div class="col">
+            <label>Hora término</label>
+            <input class="input js-termino" type="time" />
+            </div>
+        </div>
+    </template>
+
+    <p>Total horas mensuales: <strong id="horasMensualesTxt">0</strong></p>
+</section>
+
+<dialog id="feriadosModal" class="mp-modal">
+  <form method="dialog" class="mp-modal__card">
+    <div class="mp-modal__header">
+      <div class="mp-modal__icon" aria-hidden="true">⚠️</div>
+      <div class="mp-modal__titles">
+        <h3 class="mp-modal__title">Feriados detectados</h3>
+        <p class="mp-modal__subtitle">
+          Tu turno incluye días feriados. Estos días tienen <strong>recargo fijo de $15.000</strong> por dia, independiente de la cantidad de horas del turno.
+        </p>
+      </div>
+      <button class="mp-modal__close" value="cancel" aria-label="Cerrar">✕</button>
+    </div>
+
+    <div class="mp-modal__body">
+      <ul id="feriadosModalList" class="mp-modal__list"></ul>
+      <p class="mp-modal__note">
+        Si deseas, podemos ajustar el calendario.
+      </p>
+    </div>
+
+    <div class="mp-modal__footer">
+      <button class="mp-btn mp-btn--ghost" value="cancel">Entendido</button>
+    </div>
+  </form>
+</dialog>

@@ -1,0 +1,96 @@
+.page.grupo-familiar .radio-group{
+  margin: 14px 0 22px;
+}
+
+.page.grupo-familiar .radio-question{
+  margin: 0 0 12px;
+}
+
+.page.grupo-familiar .radio-item{
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 10px;
+  border-radius: 12px;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* Radio más grande */
+.page.grupo-familiar .radio-item input[type="radio"]{
+  width: 20px;
+  height: 20px;
+  accent-color: #2e69ff; /* mismo azul */
+}
+
+/* Hover suave */
+.page.grupo-familiar .radio-item:hover{
+  background: rgba(46,105,255,0.06);
+}
+
+/* Resaltado cuando está seleccionado */
+.page.grupo-familiar .radio-item:has(input[type="radio"]:checked){
+  background: rgba(46,105,255,0.10);
+  outline: 2px solid rgba(46,105,255,0.25);
+}
+
+/* Texto */
+.page.grupo-familiar .radio-text{
+  line-height: 1.4;
+}
+
+.page.grupo-familiar .radio-group legend {
+  font-size: 22px;      /* súbelo a 22px si quieres más */
+  font-weight: 600;     /* semi-bold, no exagerado */
+  margin-bottom: 12px;
+}
+
+/* Respuestas SIN negrita */
+.page.grupo-familiar .radio-item {
+  font-weight: 400;     /* normal */
+}
+
+.page.grupo-familiar .radio-item {
+  background: rgba(255,255,255,0.55);
+  border-radius: 14px;
+  padding: 16px 18px;
+  margin-top: 16px;
+}
+/* Asegura que el texto del span no herede negrita */
+.page.grupo-familiar .radio-item span {
+  font-weight: 400;
+}
+
+.page.grupo-familiar hr {
+  margin-bottom: 35px;   /* antes estaba más chico */
+}
+
+.page.grupo-familiar .kid-title {
+  font-size: 23px;       /* antes parecía h2 */
+  font-weight: 600;
+  margin: 18px 0 10px;
+  color: #0b3342;
+}
+.page.grupo-familiar .kid-block label {
+  font-size: 21px;
+}
+.page.grupo-familiar .kid-block input {
+  padding: 9px 10px;
+  max-width: 600px;
+  font-size: 18px;
+}
+.page.grupo-familiar .kid-block .field {
+  margin: 10px 0;
+}
+.page.grupo-familiar .kid-block {
+  background: rgba(255,255,255,0.55);
+  border-radius: 14px;
+  padding: 16px 18px;
+  margin-top: 16px;
+}
+
+.page.grupo-familiar .kid-nac {
+  height: 44px;
+  font-size: 16px;
+  padding: 10px 12px;
+}

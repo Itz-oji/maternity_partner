@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Formulario multipágina</title>
+  <link rel="stylesheet" href="./style/main.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+</head>
+
+<body>
+  <main class="app">
+    <section class="card">
+      <div class="progress">
+        <div class="bar" id="progressBar"></div>
+      </div>
+
+      <div id="pageHost"></div>
+
+      <div class="card-footer">
+        <div class="divider"></div>
+
+        <div class="actions actions-right">
+          <button id="btnBack" type="button">Atrás</button>
+          <button id="btnNext" type="button" class="primary">Siguiente</button>
+        </div>
+
+        <p class="error" id="errorBox" aria-live="polite"></p>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>

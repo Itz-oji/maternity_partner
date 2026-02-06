@@ -1,0 +1,15 @@
+/* Solo para la página intro */
+.page.intro .intro-logo {
+  width: 920px;
+  height: 220px;
+  object-fit: contain;
+  margin-bottom: 14px;
+}
+
+/* Responsive para que no se salga en pantallas chicas */
+@media (max-width: 640px) {
+  .page.intro .intro-logo {
+    width: 100%;
+    height: auto;
+  }
+}

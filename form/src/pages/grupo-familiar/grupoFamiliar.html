@@ -1,0 +1,53 @@
+<section class="page grupo-familiar">
+  <h2>Sobre quienes cuidaremos ♡</h2>
+  <p class="hint">
+    Cada familia es única ✨ cuéntanos a cuántos niños/as cuidaremos y un poco sobre ellos/as.
+  </p>
+
+  <hr />
+
+  <fieldset class="radio-group">
+    <legend class="radio-question">¿Cuántos niño/a cuidaremos? <span class="req">*</span></legend>
+
+    <label class="radio-item">
+        <input type="radio" name="kidsCount" value="1" />
+        <span>1 niño/a</span>
+    </label>
+
+    <label class="radio-item">
+        <input type="radio" name="kidsCount" value="2" />
+        <span>2 niños/as</span>
+    </label>
+
+    <label class="radio-item">
+        <input type="radio" name="kidsCount" value="3" />
+        <span>3 niños/as (sujeto a evaluación y confirmación)</span>
+    </label>
+  </fieldset>
+
+  <div id="kidsHost"></div>
+
+  <!-- ✅ Template reutilizable: NO se muestra, solo se clona -->
+  <template id="kidTemplate">
+    <div class="kid-block">
+      <h3 class="kid-title">Niño/a <span class="kid-index"></span></h3>
+
+      <div class="field">
+        <label>Nombre del niño/a *</label>
+        <input class="kid-nombre" type="text" placeholder="Nombre" />
+      </div>
+
+      <div class="field">
+        <label>RUT del niño/a *</label>
+        <small class="helper">(Este dato se utiliza únicamente para fines administrativos y de facturación)</small>
+        <input class="kid-rut" type="text" placeholder="Ej: 11.111.111-1" />
+      </div>
+
+      <div class="field">
+        <label>Fecha de nacimiento del niño/a *</label>
+        <input class="kid-nac" type="date" />
+      </div>
+    </div>
+  </template>
+</section>
+

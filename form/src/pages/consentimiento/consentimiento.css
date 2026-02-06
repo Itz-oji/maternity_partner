@@ -1,0 +1,48 @@
+/* Card base (reutilizable para Niño/a, Consentimiento, etc.) */
+.section-card {
+  background: #f1f6ff;            /* azul claro */
+  border-radius: 14px;
+  padding: 20px 22px;
+  margin-bottom: 20px;
+  border: 1px solid #dbe6ff;
+}
+
+/* Título de sección */
+.section-title {
+  margin: 0 0 14px;
+  font-size: 24px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+/* Checkbox alineado y bonito */
+.checkbox-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  font-size: 18px;
+  color: #1f2937;
+}
+
+.checkbox-row input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #2563eb; /* azul elegante */
+  margin-top: 5px;
+  cursor: pointer;
+}
+
+.checkbox-row span {
+  line-height: 1.45;
+}
+
+/* Asterisco */
+.required {
+  color: #d93025;
+  font-weight: 700;
+}
+
+.section-card:hover {
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.12);
+  transition: box-shadow 0.2s ease;
+}

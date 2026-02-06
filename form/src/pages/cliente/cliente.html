@@ -1,0 +1,56 @@
+<section class="page cliente">
+  <h2>♡ Sobre ti</h2>
+  <p class="hint">
+    Estos datos nos ayudan a contactarte y preparar correctamente la cotización.
+  </p>
+
+  <hr />
+
+  <!-- Nombre y Apellido -->
+  <div class="field-group">
+    <div class="field">
+      <label for="nombre">Nombre *</label>
+      <input id="nombre" type="text" placeholder="Ej: Benjamín" autocomplete="given-name" />
+    </div>
+
+    <div class="field">
+      <label for="apellido">Apellido *</label>
+      <input id="apellido" type="text" placeholder="Ej: González" autocomplete="family-name" />
+    </div>
+  </div>
+
+  <!-- RUT -->
+  <div class="field">
+    <label for="rut">RUT apoderado *</label>
+    <small class="helper">
+      (Este dato se utiliza únicamente para fines administrativos y de facturación)
+    </small>
+    <input
+      id="rut"
+      type="text"
+      placeholder="Ej: 11.111.111-1"
+      inputmode="numeric"
+    />
+  </div>
+
+  <!-- Correo -->
+  <div class="field">
+    <label for="email">Correo electrónico *</label>
+    <input
+      id="email"
+      type="email"
+      placeholder="ejemplo@ejemplo.com"
+      autocomplete="email"
+    />
+  </div>
+
+  <!-- Teléfono -->
+  <div class="field">
+    <label for="telefono">Número de teléfono</label>
+    <div class="phone-field">
+        <span class="phone-prefix">+56</span>
+        <input id="telefono" type="tel" placeholder="9 1234 5678" autocomplete="tel"
+        />
+    </div>
+  </div>
+</section>
