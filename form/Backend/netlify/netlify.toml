@@ -1,3 +1,0 @@
-[functions]
-  directory = "Backend/netlify/functions"
-  node_bundler = "esbuild"
