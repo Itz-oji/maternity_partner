@@ -1,0 +1,12 @@
+import path from "path";
+
+function buildPdfBuffer(c) {
+  return new Promise((resolve, reject) => {
+    const doc = new PDFDocument({ size: "A4", margin: 50 });
+
+    // 👇 Cargar fuente TTF desde el bundle
+    const fontPath = path.join(process.cwd(), "netlify/functions/assets/fonts/DejaVuSans.ttf");
+    doc.font(fontPath);
+
+    const chunks = [];
+    ...
