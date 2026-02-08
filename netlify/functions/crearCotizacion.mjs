@@ -1,7 +1,7 @@
 import { google } from "googleapis";
 import PDFDocument from "pdfkit";
 import { Resend } from "resend";
-import { path } from "path";
+import path from "path";
 
 function resp(statusCode, body) {
   return {
