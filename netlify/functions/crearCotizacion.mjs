@@ -74,8 +74,27 @@ export async function handler(event) {
   if (event.httpMethod === "OPTIONS") return resp(200, { ok: true });
   if (event.httpMethod !== "POST") return resp(405, { error: "Método no permitido" });
 
-  const key = event.headers["x-form-key"] || event.headers["X-FORM-KEY"];
-  if (!key || key !== process.env.FORM_API_KEY) return resp(401, { error: "No autorizado" });
+  const headers = event.headers || {};
+  const received = String(
+    headers["x-form-key"] ??
+    headers["X-FORM-KEY"] ??
+    headers["X-Form-Key"] ??
+    headers["x-form-key".toLowerCase()] ??
+    ""
+  ).trim();
+
+  const expected = String(process.env.FORM_API_KEY || "").trim();
+
+  // Debug seguro (no imprime el valor esperado)
+  console.log("AUTH DEBUG", {
+    receivedLen: received.length,
+    expectedSet: expected.length > 0,
+    headerKeys: Object.keys(headers),
+    receivedPreview: received ? received.slice(0, 6) + "***" : "",
+  });
+
+  if (!expected) return resp(500, { error: "Falta FORM_API_KEY en env vars" });
+  if (!received || received !== expected) return resp(401, { error: "No autorizado" });
 
   try {
     const data = JSON.parse(event.body || "{}");
