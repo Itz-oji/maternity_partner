@@ -18,7 +18,7 @@ function resp(statusCode, body) {
 function buildPdfBuffer(c) {
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument({ size: "A4", margin: 50 });
-    const fontPath = path.join(process.cwd(), "netlify/functions/assets/fonts/arial.ttf");
+    const fontPath = path.join(process.cwd(), "netlify/functions/assets/fonts/DejaVuSans.ttf");
     doc.font(fontPath);
     const chunks = [];
     doc.on("data", (d) => chunks.push(d));
