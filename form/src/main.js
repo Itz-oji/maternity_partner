@@ -2,7 +2,12 @@ import { pages } from "./pages.js";
 import { getState } from "./store.js";
 import { canGoBack, canGoNext, getCurrentPage, getPageCount, getPageIndex, go } from "./router.js";
 import * as V from "./validators.js";
-import { updateField, getField } from "./store.js";
+
+/* =========================
+   CONFIG: Apps Script
+========================= */
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzpGjl7HnA2DrYJFra9fGy3vC3diRLkPqYxLOw05u2I1nbOlw18SsfBql8XC-vhIbw39g/exec";
+const SECRET = "mp_2026_form_key"; // el mismo que validarás en Apps Script
 
 const pageHost = document.getElementById("pageHost");
 const btnBack = document.getElementById("btnBack");
@@ -10,64 +15,111 @@ const btnNext = document.getElementById("btnNext");
 const errorBox = document.getElementById("errorBox");
 const progressBar = document.getElementById("progressBar");
 
+let alreadySubmitted = false;
+
+async function enviarAGoogleDrive(data) {
+  const res = await fetch(SCRIPT_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ...data, secret: SECRET }),
+  });
+
+  const json = await res.json().catch(() => null);
+  if (!json || !json.ok) throw new Error(json?.error || "Error generando PDF");
+  return json;
+}
+
+function showThanksMessage() {
+  // Limpia UI y muestra mensaje final
+  pageHost.innerHTML = `
+    <div class="thanks">
+      <h2>¡Gracias! ✅</h2>
+      <p>Recibirás tu cotización en tu correo en unos minutos.</p>
+    </div>
+  `;
+
+  // Oculta botones
+  btnBack.style.display = "none";
+  btnNext.style.display = "none";
+  errorBox.textContent = "";
+  progressBar.style.width = "100%";
+}
+
 async function render() {
   document.querySelector(".card").dataset.page = getCurrentPage().id;
   errorBox.textContent = "";
-
 
   const page = getCurrentPage();
   pageHost.innerHTML = "";
   await page.render(pageHost);
 
-  // Si estamos en “Resumen”, construimos preview real desde el store
-  if (getPageIndex() === pages.length - 1) {
-    const preview = pageHost.querySelector("#preview");
-    if (preview) {
-      const { data } = getState();
-      preview.textContent = JSON.stringify(data, null, 2);
-    }
+  const isLast = getPageIndex() === pages.length - 1;
 
-    const btnSubmit = pageHost.querySelector("#btnSubmit");
-    if (btnSubmit) {
-      btnSubmit.addEventListener("click", () => {
-        // Demo: aquí luego haces fetch a tu backend / Apps Script
-        alert("Enviado (demo). Revisa consola para ver data.");
-        console.log("DATA SUBMIT:", getState().data);
-      });
-    }
-
-    btnNext.textContent = "Finalizado";
-    btnNext.disabled = true;
+  if (isLast) {
+    btnNext.textContent = "Finalizar";
   } else {
     btnNext.textContent = "Siguiente";
-    btnNext.disabled = false;
   }
 
   btnBack.disabled = !canGoBack();
-  btnNext.disabled = !canGoNext() && getPageIndex() !== pages.length - 1;
+  btnNext.disabled = !canGoNext() && !isLast;
 
-  const progress = ((getPageIndex()) / (getPageCount() - 1)) * 100;
+  const progress = (getPageIndex() / (getPageCount() - 1)) * 100;
   progressBar.style.width = `${progress}%`;
 }
 
-function tryNext() {
+async function handleNextClick() {
+  // Si ya enviaste, no hagas nada
+  if (alreadySubmitted) return;
+
   const page = getCurrentPage();
   const ok = page.validate?.(V) ?? true;
+
   if (!ok) {
     errorBox.textContent = page.errorMessage || "Revisa los campos.";
     return;
   }
-  go(+1);
-  render();
+
+  const isLast = getPageIndex() === pages.length - 1;
+
+  // Si NO es la última página, avanza normal
+  if (!isLast) {
+    go(+1);
+    render();
+    return;
+  }
+
+  // ✅ Si ES la última página: "Finalizar"
+  try {
+    alreadySubmitted = true;
+    btnNext.disabled = true;
+    btnNext.textContent = "Enviando...";
+
+    const data = getState().data;
+
+    // Envía a Apps Script (crea PDF y lo guarda en Drive)
+    await enviarAGoogleDrive(data);
+
+    // Muestra gracias
+    showThanksMessage();
+  } catch (err) {
+    console.error(err);
+    alreadySubmitted = false;
+    btnNext.disabled = false;
+    btnNext.textContent = "Finalizar";
+    errorBox.textContent = "No se pudo enviar. Intenta nuevamente.";
+    alert("❌ Error: " + (err?.message || err));
+  }
 }
 
-function tryBack() {
+function handleBackClick() {
+  if (alreadySubmitted) return;
   go(-1);
   render();
 }
 
-btnBack.addEventListener("click", tryBack);
-btnNext.addEventListener("click", tryNext);
+btnBack.addEventListener("click", handleBackClick);
+btnNext.addEventListener("click", handleNextClick);
 
 // Render inicial
 render();
