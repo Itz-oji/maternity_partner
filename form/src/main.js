@@ -6,7 +6,6 @@ import * as V from "./validators.js";
 /* =========================
    CONFIG: Apps Script
 ========================= */
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzpGjl7HnA2DrYJFra9fGy3vC3diRLkPqYxLOw05u2I1nbOlw18SsfBql8XC-vhIbw39g/exec";
 const SECRET = "mp_2026_form_key"; // el mismo que validarás en Apps Script
 
 const pageHost = document.getElementById("pageHost");
@@ -18,7 +17,7 @@ const progressBar = document.getElementById("progressBar");
 let alreadySubmitted = false;
 
 async function enviarAGoogleDrive(data) {
-  const res = await fetch(SCRIPT_URL, {
+  const res = await fetch("/api/guardar", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ ...data, secret: SECRET }),
