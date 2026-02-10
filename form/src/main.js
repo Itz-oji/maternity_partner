@@ -28,6 +28,22 @@ async function enviarAGoogleDrive(data) {
   return json;
 }
 
+function showThanksMessage() {
+  // Limpia UI y muestra mensaje final
+  pageHost.innerHTML = `
+    <div class="thanks">
+      <h2>¡Gracias! ✅</h2>
+      <p>Recibirás tu cotización en tu correo en unos minutos.</p>
+    </div>
+  `;
+
+  // Oculta botones
+  btnBack.style.display = "none";
+  btnNext.style.display = "none";
+  errorBox.textContent = "";
+  progressBar.style.width = "100%";
+}
+
 async function render() {
   document.querySelector(".card").dataset.page = getCurrentPage().id;
   errorBox.textContent = "";
@@ -38,7 +54,11 @@ async function render() {
 
   const isLast = getPageIndex() === pages.length - 1;
 
-  btnNext.textContent = isLast ? "Finalizar" : "Siguiente";
+  if (isLast) {
+    btnNext.textContent = "Finalizar";
+  } else {
+    btnNext.textContent = "Siguiente";
+  }
 
   btnBack.disabled = !canGoBack();
   btnNext.disabled = !canGoNext() && !isLast;
@@ -48,7 +68,7 @@ async function render() {
 }
 
 async function handleNextClick() {
-  // Evita doble envío
+  // Si ya enviaste, no hagas nada
   if (alreadySubmitted) return;
 
   const page = getCurrentPage();
@@ -59,49 +79,35 @@ async function handleNextClick() {
     return;
   }
 
-  const isLastPage = getPageIndex() === getPageCount() - 1;
+  const isLast = getPageIndex() === pages.length - 1;
 
-  // Si NO es la última página: avanza normal
-  if (!isLastPage) {
+  // Si NO es la última página, avanza normal
+  if (!isLast) {
     go(+1);
     render();
     return;
   }
 
-  // --- ESTADO DE CARGA ---
-  alreadySubmitted = true;
-  btnBack.disabled = true;
-  btnNext.disabled = true;
-  btnNext.textContent = "Enviando...";
-  errorBox.textContent = "";
-
+  // ✅ Si ES la última página: "Finalizar"
   try {
+    alreadySubmitted = true;
+    btnNext.disabled = true;
+    btnNext.textContent = "Enviando...";
+
     const data = getState().data;
 
+    // Envía a Apps Script (crea PDF y lo guarda en Drive)
     await enviarAGoogleDrive(data);
 
-    // Mostrar pantalla de éxito
-    pageHost.innerHTML = `
-      <div class="success">
-        <h2>¡Gracias!</h2>
-        <p>Tu cotización fue enviada correctamente.</p>
-        <p>Recibirás el PDF en tu correo en unos minutos.</p>
-      </div>
-    `;
-
-    // Ocultar botones (tu HTML tiene .actions .actions-right, con esto basta)
-    const actions = document.querySelector(".actions");
-    if (actions) actions.style.display = "none";
-
-    progressBar.style.width = "100%";
+    // Muestra gracias
+    showThanksMessage();
   } catch (err) {
     console.error(err);
-
     alreadySubmitted = false;
-    btnBack.disabled = !canGoBack();
     btnNext.disabled = false;
     btnNext.textContent = "Finalizar";
-    errorBox.textContent = "Ocurrió un error. Intenta nuevamente.";
+    errorBox.textContent = "No se pudo enviar. Intenta nuevamente.";
+    alert("❌ Error: " + (err?.message || err));
   }
 }
 
