@@ -15,12 +15,30 @@
         <div class="bar" id="progressBar"></div>
       </div>
 
+      <!-- FORM: aquí se renderizan tus páginas -->
       <div id="pageHost"></div>
 
-      <div class="card-footer">
+      <!-- LOADING: oculto por defecto -->
+      <div id="sendingView" class="state-view" hidden>
+        <div class="state-center">
+          <div class="spinner" aria-hidden="true"></div>
+          <h2>Enviando tu cotización…</h2>
+          <p>Esto puede tardar unos segundos. No cierres esta ventana.</p>
+        </div>
+      </div>
+
+      <!-- THANKS: oculto por defecto -->
+      <div id="thanksView" class="state-view" hidden>
+        <div class="state-center">
+          <h2>¡Gracias! ✅</h2>
+          <p>Recibirás tu cotización en tu correo en unos minutos.</p>
+        </div>
+      </div>
+
+      <div class="card-footer" id="footer">
         <div class="divider"></div>
 
-        <div class="actions actions-right">
+        <div class="actions actions-right" id="actions">
           <button id="btnBack" type="button">Atrás</button>
           <button id="btnNext" type="button" class="primary">Siguiente</button>
         </div>

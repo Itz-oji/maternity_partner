@@ -6,13 +6,18 @@ import * as V from "./validators.js";
 /* =========================
    CONFIG: Apps Script
 ========================= */
-const SECRET = "mp_2026_form_key"; // el mismo que validarás en Apps Script
+const SECRET = "mp_2026_form_key";
 
 const pageHost = document.getElementById("pageHost");
 const btnBack = document.getElementById("btnBack");
 const btnNext = document.getElementById("btnNext");
 const errorBox = document.getElementById("errorBox");
 const progressBar = document.getElementById("progressBar");
+
+const sendingView = document.getElementById("sendingView");
+const thanksView = document.getElementById("thanksView");
+const footer = document.getElementById("footer");
+const actions = document.getElementById("actions");
 
 let alreadySubmitted = false;
 
@@ -28,37 +33,48 @@ async function enviarAGoogleDrive(data) {
   return json;
 }
 
-function showThanksMessage() {
-  // Limpia UI y muestra mensaje final
-  pageHost.innerHTML = `
-    <div class="thanks">
-      <h2>¡Gracias! ✅</h2>
-      <p>Recibirás tu cotización en tu correo en unos minutos.</p>
-    </div>
-  `;
+function showFormView() {
+  pageHost.hidden = false;
+  sendingView.hidden = true;
+  thanksView.hidden = true;
+  footer.hidden = false;
+}
 
-  // Oculta botones
-  btnBack.style.display = "none";
-  btnNext.style.display = "none";
+function showSendingView() {
+  pageHost.hidden = true;
+  sendingView.hidden = false;
+  thanksView.hidden = true;
+
+  // deshabilita acciones para que no haya doble click
+  btnBack.disabled = true;
+  btnNext.disabled = true;
+  btnNext.textContent = "Enviando...";
   errorBox.textContent = "";
+}
+
+function showThanksView() {
+  pageHost.hidden = true;
+  sendingView.hidden = true;
+  thanksView.hidden = false;
+
+  // oculta botones
+  footer.hidden = true;
   progressBar.style.width = "100%";
+  errorBox.textContent = "";
 }
 
 async function render() {
   document.querySelector(".card").dataset.page = getCurrentPage().id;
   errorBox.textContent = "";
 
+  showFormView();
+
   const page = getCurrentPage();
   pageHost.innerHTML = "";
   await page.render(pageHost);
 
   const isLast = getPageIndex() === pages.length - 1;
-
-  if (isLast) {
-    btnNext.textContent = "Finalizar";
-  } else {
-    btnNext.textContent = "Siguiente";
-  }
+  btnNext.textContent = isLast ? "Finalizar" : "Siguiente";
 
   btnBack.disabled = !canGoBack();
   btnNext.disabled = !canGoNext() && !isLast;
@@ -68,7 +84,6 @@ async function render() {
 }
 
 async function handleNextClick() {
-  // Si ya enviaste, no hagas nada
   if (alreadySubmitted) return;
 
   const page = getCurrentPage();
@@ -81,31 +96,36 @@ async function handleNextClick() {
 
   const isLast = getPageIndex() === pages.length - 1;
 
-  // Si NO es la última página, avanza normal
   if (!isLast) {
     go(+1);
     render();
     return;
   }
 
-  // ✅ Si ES la última página: "Finalizar"
   try {
     alreadySubmitted = true;
-    btnNext.disabled = true;
-    btnNext.textContent = "Enviando...";
+
+    // ✅ Señal visual inmediata
+    showSendingView();
 
     const data = getState().data;
-
-    // Envía a Apps Script (crea PDF y lo guarda en Drive)
     await enviarAGoogleDrive(data);
 
-    // Muestra gracias
-    showThanksMessage();
+    // ✅ Éxito
+    showThanksView();
   } catch (err) {
     console.error(err);
+
     alreadySubmitted = false;
+
+    // volver al formulario
+    showFormView();
+
+    // restaurar botón
     btnNext.disabled = false;
     btnNext.textContent = "Finalizar";
+    btnBack.disabled = !canGoBack();
+
     errorBox.textContent = "No se pudo enviar. Intenta nuevamente.";
     alert("❌ Error: " + (err?.message || err));
   }
@@ -120,5 +140,4 @@ function handleBackClick() {
 btnBack.addEventListener("click", handleBackClick);
 btnNext.addEventListener("click", handleNextClick);
 
-// Render inicial
 render();
