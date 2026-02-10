@@ -279,3 +279,14 @@ button:disabled {
   color: white;
 }
 .mp-btn--ghost:hover { filter: brightness(0.95); }
+
+.success {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.success h2 {
+  color: #2e69ff;
+  margin-bottom: 10px;
+}
+
