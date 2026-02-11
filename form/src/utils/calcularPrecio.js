@@ -25,13 +25,7 @@ export function calcularPrecioBase(horasMensuales, precioHora = PRECIO_HORA) {
  * @param {number} precioHora
  * @param {number} recargoPorDia
  */
-export function calcularTotalServicio(
-  horasMensuales,
-  feriadosCount = 0,
-  precioHora = PRECIO_HORA,
-  recargoPorDia = RECARGO_FERIADO_POR_DIA
-) {
-  const base = calcularPrecioBase(horasMensuales, precioHora);
-  const recargo = Math.max(0, Number(feriadosCount) || 0) * recargoPorDia;
-  return base + recargo;
+export function calcularTotalServicio(horasMensuales, feriadosCount = 0) {
+  const base = calcularPrecioBase(horasMensuales);
+  return base + (Number(feriadosCount) || 0) * 15000;
 }

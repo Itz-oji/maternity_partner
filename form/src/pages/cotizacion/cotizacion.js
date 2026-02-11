@@ -276,6 +276,9 @@ export const cotizacionPage = {
       // Solo aplica a periódico + con fecha + con filas
       if (tipo !== "periodico" || !fecha || !rows?.length) {
         lastFeriadoAlertKey = "";
+        updateField("feriadosCount", 0);
+        const horas = getField("horasMensuales") ?? 0;
+        updateField("total", formatCLP(calcularPrecioBase(horas)));
         return;
       }
 
