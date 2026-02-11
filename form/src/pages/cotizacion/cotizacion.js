@@ -1,5 +1,9 @@
 import { loadHtml } from "../../utils/loadHtml.js";
 import { getField, updateField } from "../../store.js";
+import { calcularHorasMensuales } from "../../utils/calculoHoras.js";
+import { calcularPrecioBase, calcularTotalServicio, formatCLP } from "../../utils/calcularPrecio.js";
+
+
 
 export const cotizacionPage = {
   id: "cotizacion",
@@ -169,21 +173,6 @@ export const cotizacionPage = {
 
       calculateHorasMensuales(); // ✅ recalcula al terminar de dibujar filas
     }
-
-    // ------------------- CÁLCULO HORAS MENSUALES -------------------
-
-    const weekdayMap = {
-      lunes: 1,
-      martes: 2,
-      miercoles: 3,
-      miércoles: 3,
-      jueves: 4,
-      viernes: 5,
-      sabado: 6,
-      sábado: 6,
-      domingo: 7,
-    };
-
     // ------------------- FERIADOS (Chile) -------------------
     // Cache en memoria para no pedir lo mismo mil veces
     const feriadosCache = new Map(); // year -> { set: Set('YYYY-MM-DD'), nameByDate: Map(date->name) }
@@ -240,6 +229,45 @@ export const cotizacionPage = {
 
     // Muestra alerta si el turno incluye feriados dentro del mes desde fechaInicio
     let lastFeriadoAlertKey = ""; // evita spamear alert por cada change
+
+    const weekdayMap = {
+      lunes: 1,
+      martes: 2,
+      miercoles: 3,
+      miércoles: 3,
+      jueves: 4,
+      viernes: 5,
+      sabado: 6,
+      sábado: 6,
+      domingo: 7,
+    };
+
+    function normalizeWeekdayValue(val) {
+      if (!val) return null;
+      const key = String(val).toLowerCase().trim();
+      if (weekdayMap[key]) return weekdayMap[key];
+
+      const num = Number(val);
+      if (num >= 1 && num <= 7) return num;
+
+      return null;
+    }
+
+    function timeToMinutes(hhmm) {
+      if (!hhmm || typeof hhmm !== "string") return null;
+      const [h, m] = hhmm.split(":").map(Number);
+      if (!Number.isFinite(h) || !Number.isFinite(m)) return null;
+      return h * 60 + m;
+    }
+
+    function diffHours(inicio, termino) {
+      const a = timeToMinutes(inicio);
+      const b = timeToMinutes(termino);
+      if (a == null || b == null) return null;
+      if (b <= a) return null;
+      return (b - a) / 60;
+    }
+
     async function checkFeriadosEnTurno() {
       const fecha = getField("fechaInicio");
       const tipo = getField("tipoServicio") ?? "";
@@ -271,12 +299,21 @@ export const cotizacionPage = {
         if (feriadosEnTurno.length > 0) {
           lastFeriadoAlertKey = key;
 
+          updateField("feriadosCount", feriadosEnTurno.length);
+          
           openFeriadosModal(
             feriadosEnTurno.map((d) => ({
               date: d,
               name: nameByDate.get(d) || "Feriado",
             }))
           );
+          const horas = getField("horasMensuales") ?? 0;
+          const totalConRecargo = calcularTotalServicio(horas, feriadosEnTurno.length);
+          updateField("total", formatCLP(totalConRecargo));
+        }else{
+          updateField("feriadosCount", 0);
+          const horas = getField("horasMensuales") ?? 0;
+          updateField("total", formatCLP(calcularPrecioBase(horas)));
         }
       } catch (err) {
         // Si la API falla, no rompas el formulario
@@ -284,78 +321,20 @@ export const cotizacionPage = {
       }
     }
 
-    function timeToMinutes(hhmm) {
-      if (!hhmm || typeof hhmm !== "string") return null;
-      const [h, m] = hhmm.split(":").map(Number);
-      if (!Number.isFinite(h) || !Number.isFinite(m)) return null;
-      return h * 60 + m;
-    }
-
-    function diffHours(inicio, termino) {
-      const a = timeToMinutes(inicio);
-      const b = timeToMinutes(termino);
-      if (a == null || b == null) return null;
-      if (b <= a) return null; // inválido si termina antes o igual
-      return (b - a) / 60;
-    }
-
-    function countWeekdayInMonthFromDay(year, monthIndex0, targetWeekdayISO, startDay = 1) {
-      const daysInMonth = new Date(year, monthIndex0 + 1, 0).getDate();
-      const from = Math.max(1, Math.min(daysInMonth, Number(startDay) || 1));
-
-      let count = 0;
-      for (let d = from; d <= daysInMonth; d++) {
-        const jsDay = new Date(year, monthIndex0, d).getDay(); // 0=dom ... 6=sab
-        const isoDay = jsDay === 0 ? 7 : jsDay; // 1=lun ... 7=dom
-        if (isoDay === targetWeekdayISO) count++;
-      }
-      return count;
-    }
-
-    function normalizeWeekdayValue(val) {
-      if (!val) return null;
-
-      const key = String(val).toLowerCase().trim();
-      if (weekdayMap[key]) return weekdayMap[key];
-
-      const num = Number(val);
-      if (num >= 1 && num <= 7) return num;
-
-      return null;
-    }
-
     function calculateHorasMensuales() {
       const fecha = getField("fechaInicio");
       const rows = getDiasHorarios();
 
-      // si no hay fecha o filas, total 0
-      if (!fecha || !rows?.length) {
-        updateField("horasMensuales", 0);
-        renderHorasMensualesUI();
-        return 0;
-      }
-
-      const base = new Date(fecha + "T00:00:00");
-      const year = base.getFullYear();
-      const month0 = base.getMonth();
-      const startDay = base.getDate(); 
-
-      let total = 0;
-
-      for (const r of rows) {
-        const weekday = normalizeWeekdayValue(r.dia);
-        const horasDia = diffHours(r.inicio, r.termino);
-
-        if (!weekday || horasDia == null) continue;
-
-        const ocurrencias = countWeekdayInMonthFromDay(year, month0, weekday, startDay);
-        total += horasDia * ocurrencias;
-      }
-
-      total = Math.round(total * 100) / 100;
+      const total = calcularHorasMensuales(fecha, rows);
 
       updateField("horasMensuales", total);
-      renderHorasMensualesUI(); // ✅ aquí se actualiza el texto del HTML
+      renderHorasMensualesUI();
+
+      // ✅ Precio base (sin feriados)
+      const precioBase = calcularPrecioBase(total);
+      updateField("precioBase", precioBase);
+      updateField("total", formatCLP(precioBase));
+
       void checkFeriadosEnTurno();
       return total;
     }

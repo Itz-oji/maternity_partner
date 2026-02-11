@@ -2,6 +2,8 @@ import { pages } from "./pages.js";
 import { getState } from "./store.js";
 import { canGoBack, canGoNext, getCurrentPage, getPageCount, getPageIndex, go } from "./router.js";
 import * as V from "./validators.js";
+import { calcularHorasMensuales } from "./utils/calculoHoras.js";
+import { calcularPrecioBase, formatCLP } from "./utils/calcularPrecio.js";
 
 /* =========================
    CONFIG: Apps Script
@@ -31,6 +33,24 @@ async function enviarAGoogleDrive(data) {
   const json = await res.json().catch(() => null);
   if (!json || !json.ok) throw new Error(json?.error || "Error generando PDF");
   return json;
+}
+
+// ✅ NUEVO: prepara payload con horas + total recalculados
+function prepararDatosParaEnvio(state) {
+  const data = { ...state.data };
+
+  const diasHorarios = Array.isArray(data.diasHorarios) ? data.diasHorarios : [];
+  const horasMensuales = calcularHorasMensuales(data.fechaInicio, diasHorarios);
+
+  const totalRaw = calcularPrecioBase(horasMensuales);
+  const total = formatCLP(totalRaw);
+
+  return {
+    ...data,
+    horasMensuales, // number
+    totalRaw,       // number
+    total,          // "$123.456"
+  };
 }
 
 function showFormView() {
@@ -108,7 +128,10 @@ async function handleNextClick() {
     // ✅ Señal visual inmediata
     showSendingView();
 
-    const data = getState().data;
+    // ✅ NUEVO: recalcular total antes de enviar
+    const state = getState();
+    const data = prepararDatosParaEnvio(state);
+
     await enviarAGoogleDrive(data);
 
     // ✅ Éxito
