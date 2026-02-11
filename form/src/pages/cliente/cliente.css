@@ -1,23 +1,24 @@
-/* Nombre y Apellido en una línea */
-.page.cliente .field-group {
+/* Nombre/Apellido y también Teléfono/Fijo en una línea */
+.page.cliente .field-group{
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
 }
 
-@media (max-width: 640px) {
-  .page.cliente .field-group {
+@media (max-width: 640px){
+  .page.cliente .field-group{
     grid-template-columns: 1fr;
   }
 }
 
-/* Teléfono con prefijo fijo */
-.page.cliente .phone-field {
+/* Teléfono con prefijo fijo (mismo look de inputs) */
+.page.cliente .phone-field{
   display: flex;
   align-items: center;
+  width: 100%;
 }
 
-.page.cliente .phone-prefix {
+.page.cliente .phone-prefix{
   padding: 11px 12px;
   background: #e6eef6;
   border: 1px solid #9db6d0;
@@ -25,9 +26,22 @@
   border-radius: 10px 0 0 10px;
   font-weight: 700;
   color: #0f4d63;
+  white-space: nowrap;
 }
 
-.page.cliente .phone-field input {
+.page.cliente .phone-field input{
   flex: 1;
+  width: 100%;
+  border: 1px solid #9db6d0;
+  border-left: none;
   border-radius: 0 10px 10px 0;
+  padding: 11px 12px;
+  background: #ffffff;
+  outline: none;
+}
+
+/* Focus bonito */
+.page.cliente .phone-field input:focus{
+  border-color: #2e69ff;
+  box-shadow: 0 0 0 4px rgba(46,105,255,0.12);
 }

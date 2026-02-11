@@ -9,19 +9,19 @@
   <!-- Nombre y Apellido -->
   <div class="field-group">
     <div class="field">
-      <label for="nombre">Nombre *</label>
+      <label for="nombre">Nombre <span class="req">*</span></label>
       <input id="nombre" type="text" placeholder="Ej: Benjamín" autocomplete="given-name" />
     </div>
 
     <div class="field">
-      <label for="apellido">Apellido *</label>
+      <label for="apellido">Apellido <span class="req">*</span></label>
       <input id="apellido" type="text" placeholder="Ej: González" autocomplete="family-name" />
     </div>
   </div>
 
   <!-- RUT -->
   <div class="field">
-    <label for="rut">RUT apoderado *</label>
+    <label for="rut">RUT apoderado <span class="req">*</span></label>
     <small class="helper">
       (Este dato se utiliza únicamente para fines administrativos y de facturación)
     </small>
@@ -35,7 +35,7 @@
 
   <!-- Correo -->
   <div class="field">
-    <label for="email">Correo electrónico *</label>
+    <label for="email">Correo electrónico <span class="req">*</span></label>
     <input
       id="email"
       type="email"
@@ -44,13 +44,23 @@
     />
   </div>
 
-  <!-- Teléfono -->
-  <div class="field">
-    <label for="telefono">Número de teléfono</label>
-    <div class="phone-field">
+  <div class="field-group">
+    <!-- Móvil -->
+    <div class="field">
+      <label for="telefonoMovil">Teléfono móvil <span class="req">*</span></label>
+      <div class="phone-field">
         <span class="phone-prefix">+56</span>
-        <input id="telefono" type="tel" placeholder="9 1234 5678" autocomplete="tel"
-        />
+        <input id="telefonoMovil" type="tel" maxlength="9" placeholder="9 1234 5678" autocomplete="tel" />
+      </div>
+    </div>
+
+    <!-- Fijo -->
+    <div class="field">
+      <label for="telefonoFijo">Teléfono fijo</label>
+      <div class="phone-field">
+        <span class="phone-prefix">+56</span>
+        <input id="telefonoFijo" type="tel" maxlength="9" placeholder="2 2345 6789" autocomplete="tel" />
+      </div>
     </div>
   </div>
 </section>
