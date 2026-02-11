@@ -295,25 +295,38 @@ export const cotizacionPage = {
 
         const fechasTurno = getFechasTurnoEnMesDesdeInicio(base, rows);
         const feriadosEnTurno = fechasTurno.filter((d) => set.has(d));
+        const rowsValidas = rows.filter(r => normalizeWeekdayValue(r.dia) && diffHours(r.inicio, r.termino) != null);
 
-        if (feriadosEnTurno.length > 0) {
+        // Si no hay turnos válidos, no recargo
+        if (!rowsValidas.length) {
+          updateField("feriadosCount", 0);
+          const horas = getField("horasMensuales") ?? 0;
+          updateField("total", formatCLP(calcularPrecioBase(horas)));
+          return;
+        }
+
+        // Como fechasTurno ya se arma por weekdays seleccionados, basta con contar feriadosEnTurno
+        const feriadosTrabajados = feriadosEnTurno.length;
+
+        updateField("feriadosCount", feriadosTrabajados);
+
+        const horas = getField("horasMensuales") ?? 0;
+        const precioBase = calcularPrecioBase(horas);
+
+        // ✅ Recargo fijo por feriado trabajado
+        const RECARGO_POR_FERIADO = 15000;
+        const totalConRecargo = precioBase + feriadosTrabajados * RECARGO_POR_FERIADO;
+
+        updateField("total", formatCLP(totalConRecargo));
+
+        if (feriadosTrabajados > 0) {
           lastFeriadoAlertKey = key;
-
-          updateField("feriadosCount", feriadosEnTurno.length);
-          
           openFeriadosModal(
             feriadosEnTurno.map((d) => ({
               date: d,
               name: nameByDate.get(d) || "Feriado",
             }))
           );
-          const horas = getField("horasMensuales") ?? 0;
-          const totalConRecargo = calcularTotalServicio(horas, feriadosEnTurno.length);
-          updateField("total", formatCLP(totalConRecargo));
-        }else{
-          updateField("feriadosCount", 0);
-          const horas = getField("horasMensuales") ?? 0;
-          updateField("total", formatCLP(calcularPrecioBase(horas)));
         }
       } catch (err) {
         // Si la API falla, no rompas el formulario
