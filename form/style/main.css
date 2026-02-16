@@ -44,7 +44,7 @@ body {
   border-radius: 16px;
   padding: 24px 32px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-  font-size: 22px;
+  font-size: 18px;
 }
 
 /* BARRA DE PROGRESO */
@@ -315,3 +315,98 @@ button:disabled {
   font-weight: 700;
   font-size: 22px;
 }
+
+/* =========================
+   MOBILE TUNING (pegar al final)
+========================= */
+@media (max-width: 640px) {
+  /* base */
+  body {
+    font-size: 16px;
+  }
+
+  .app {
+    padding: 14px;
+    align-items: flex-start; /* mejor en mobile */
+  }
+
+  /* tarjeta */
+  .card {
+    padding: 16px 14px;
+    border-radius: 14px;
+    font-size: 16px; /* 🔥 antes 22px */
+    max-width: 100%;
+  }
+
+  /* títulos generales (si tienes h1/h2 etc) */
+  h1 { font-size: 20px; margin: 8px 0; }
+  h2 { font-size: 18px; margin: 8px 0; }
+  h3 { font-size: 16px; margin: 6px 0; }
+
+  /* labels y ayudas */
+  label {
+    font-size: 14px;
+  }
+  small {
+    font-size: 12px;
+  }
+
+  /* inputs */
+  input,
+  select,
+  textarea {
+    padding: 10px 11px;
+    border-radius: 10px;
+    font-size: 16px; /* evita zoom en iOS si fuese Safari */
+  }
+
+  /* botones */
+  .actions {
+    gap: 10px;
+    flex-direction: column; /* se ven mejor apilados */
+  }
+
+  button {
+    width: 100%;
+    font-size: 16px; /* antes 18px */
+    padding: 10px 14px;
+    border-radius: 12px;
+  }
+
+  /* barra progreso */
+  .progress {
+    height: 8px;
+    margin-bottom: 14px;
+  }
+
+  /* modal */
+  .mp-modal {
+    max-width: 94vw;
+  }
+  .mp-modal__header {
+    padding: 16px 16px 12px;
+    grid-template-columns: 36px 1fr 36px;
+  }
+  .mp-modal__title {
+    font-size: 18px; /* antes 28px */
+  }
+  .mp-modal__subtitle {
+    font-size: 14px; /* antes 20px */
+  }
+  .mp-modal__body {
+    padding: 14px 16px 10px;
+  }
+  .mp-modal__footer {
+    padding: 14px 16px 16px;
+  }
+  .mp-btn {
+    width: 100%;
+    font-size: 16px;
+  }
+
+  /* extra */
+  .req {
+    font-size: 16px; /* antes 22px */
+  }
+}
+
