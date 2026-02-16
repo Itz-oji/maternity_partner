@@ -84,14 +84,14 @@
             </label>
         </fieldset>
     </div>
-
-  <!-- FECHA INICIO -->
-
-    <div class="field">
+    
+    <!-- FECHA INICIO (solo periódico) -->
+    <div class="field" id="fechaInicioWrap" style="display:none;">
       <label for="fechaInicioInput">¿En qué fecha deseas partir? <span class="req">*</span></label>
 
       <div class="date-picker" data-key="fechaInicio">
-        <input id="fechaInicioInput" class="date-input" type="text" placeholder="Selecciona una fecha" readonly   autocomplete="off"/>
+        <input id="fechaInicioInput" class="date-input" type="text"
+          placeholder="Selecciona una fecha" readonly autocomplete="off" />
 
         <div class="date-pop" hidden>
           <calendar-date class="date-cal"></calendar-date>

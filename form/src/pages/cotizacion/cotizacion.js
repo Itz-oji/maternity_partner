@@ -48,6 +48,7 @@ export const cotizacionPage = {
 
     // Inputs fecha (Flatpickr)
     const fechaInicioInput = container.querySelector("#fechaInicioInput");
+    const fechaInicioWrap = container.querySelector("#fechaInicioWrap");
     const fechaAdaptativaInput = container.querySelector("#fechaAdaptativaInput");
 
     // Config
@@ -176,6 +177,21 @@ export const cotizacionPage = {
     /* =========================
        Helpers UI
     ========================= */
+
+
+    function setVisible(el, show) {
+      if (!el) return;
+      el.style.display = show ? "block" : "none";
+    }
+
+    function clearFechaInicio() {
+      updateField("fechaInicio", "");
+      if (fechaInicioInput) fechaInicioInput.value = "";
+
+      // si existe flatpickr, limpia también el altInput y estado interno
+      const fp = fechaInicioInput?._flatpickr;
+      if (fp) fp.clear();
+    }
 
     function openFeriadosModal(items) {
       if (!feriadosModal || !feriadosModalList) return;
@@ -782,22 +798,34 @@ export const cotizacionPage = {
       if (nocturnoWarning) nocturnoWarning.hidden = true;
       updateField("turnoNocturno", "");
 
-      if (tipo === "periodico") {
+      const isPeriodico = tipo === "periodico";
+      const isOcasional = tipo === "ocasional";
+
+      // ✅ Fecha inicio SOLO en periódico
+      setVisible(fechaInicioWrap, isPeriodico);
+
+      if (isPeriodico) {
         if (diasWrap) diasWrap.style.display = "block";
         if (ocasionalWrap) ocasionalWrap.style.display = "none";
 
         // limpiar ocasional
         setTurnosOcasionales([]);
-        const fp = fechasOcasionalesInput?._flatpickr;
-        if (fp) fp.clear();
+        const fpO = fechasOcasionalesInput?._flatpickr;
+        if (fpO) fpO.clear();
         if (ocasionalTurnosList) ocasionalTurnosList.innerHTML = "";
+
+        // ✅ si vienes de ocasional, no necesitas fechaInicio antigua “fantasma”
+        // (pero en periódico sí la usarás, así que NO la limpies acá)
 
         renderDiasRows(diasSemana?.value);
         calculateHorasMensuales();
         return;
       }
 
-      if (tipo === "ocasional") {
+      if (isOcasional) {
+        // ✅ en ocasional NO existe fechaInicio
+        clearFechaInicio();
+
         if (diasWrap) diasWrap.style.display = "none";
         if (diasHorariosWrap) {
           diasHorariosWrap.innerHTML = "";
@@ -818,7 +846,9 @@ export const cotizacionPage = {
       // ninguno seleccionado
       if (diasWrap) diasWrap.style.display = "none";
       if (ocasionalWrap) ocasionalWrap.style.display = "none";
+      setVisible(fechaInicioWrap, false);
     }
+
 
     function refreshSelectedUI() {
       container.querySelectorAll(".radio-item").forEach((label) => label.classList.remove("selected"));
@@ -928,14 +958,17 @@ export const cotizacionPage = {
     const dirOk = required(getField("direccion"));
     const transpOk = required(getField("transporte"));
     const tipoOk = required(tipo);
-    const fechaInicioOk = required(getField("fechaInicio"));
     const turnoOk = required(turno);
     const fechaAdaptOk = (turno !== "si") || required(getField("fechaAdaptativa"));
+
+    // ✅ Fecha inicio SOLO si es periódico
+    const fechaInicioOk = (tipo !== "periodico") || required(getField("fechaInicio"));
 
     const baseOk = comunaOk && dirOk && transpOk && tipoOk && fechaInicioOk && turnoOk && fechaAdaptOk;
     if (!baseOk) return false;
 
     if (tipo === "periodico") {
+      // además del select días, acá podrías exigir que las filas tengan valores si quieres
       return required(getField("diasSemana"));
     }
 
@@ -972,10 +1005,9 @@ export const cotizacionPage = {
       );
     }
 
-    // si el valor es raro, no dejes pasar
     return false;
   },
 
   errorMessage:
-    "Completa comuna, dirección, transporte, tipo de servicio, fecha de inicio, turno adaptativo (y fechas/horario si es ocasional, o días si es periódico).",
+  "Completa comuna, dirección, transporte, tipo de servicio, turno adaptativo (y fecha si aplica). Si es periódico: fecha de inicio + días/horarios. Si es ocasional: fechas + horas (mínimo 4h).",
 };
