@@ -84,20 +84,6 @@
             </label>
         </fieldset>
     </div>
-    
-    <!-- FECHA INICIO (solo periódico) -->
-    <div class="field" id="fechaInicioWrap" style="display:none;">
-      <label for="fechaInicioInput">¿En qué fecha deseas partir? <span class="req">*</span></label>
-
-      <div class="date-picker" data-key="fechaInicio">
-        <input id="fechaInicioInput" class="date-input" type="text"
-          placeholder="Selecciona una fecha" readonly autocomplete="off" />
-
-        <div class="date-pop" hidden>
-          <calendar-date class="date-cal"></calendar-date>
-        </div>
-      </div>
-    </div>
 
     <!-- TURNO ADAPTATIVO -->
     <fieldset class="radio-group">
@@ -131,6 +117,20 @@
     </div>
 
 
+    <!-- FECHA INICIO (solo periódico) -->
+    <div class="field" id="fechaInicioWrap" style="display:none;">
+      <label for="fechaInicioInput">¿En qué fecha deseas partir? <span class="req">*</span></label>
+
+      <div class="date-picker" data-key="fechaInicio">
+        <input id="fechaInicioInput" class="date-input" type="text"
+          placeholder="Selecciona una fecha" readonly autocomplete="off" />
+
+        <div class="date-pop" hidden>
+          <calendar-date class="date-cal"></calendar-date>
+        </div>
+      </div>
+    </div>
+    
     <!-- SOLO si es Periódico -->
     <div class="field" id="diasWrap" style="display:none;">
         <label for="diasSemana">Cantidad de días a la semana <span class="req">*</span></label>
