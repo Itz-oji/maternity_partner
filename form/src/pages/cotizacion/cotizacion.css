@@ -629,3 +629,162 @@
   border-color: #d93025 !important;
   box-shadow: 0 0 0 3px rgba(217,48,37,0.15) !important;
 }
+
+/* =========================
+   MOBILE: cotización (pegar al final)
+========================= */
+@media (max-width: 640px){
+  .page.cotizacion{
+    --mx: 12px; /* menos margen lateral en mobile */
+  }
+
+  /* tipografía global de la página */
+  .page.cotizacion label,
+  .page.cotizacion legend{
+    font-size: 16px;   /* antes 22 */
+    font-weight: 600;
+  }
+
+  .page.cotizacion input,
+  .page.cotizacion select,
+  .page.cotizacion textarea{
+    font-size: 16px;   /* antes 20 */
+  }
+
+  .page.cotizacion select option{
+    font-size: 16px;
+  }
+
+  /* radios */
+  .page.cotizacion .radio-group{
+    margin-top: 10px;
+    margin-bottom: 16px;
+  }
+
+  .page.cotizacion .radio-group legend{
+    margin-bottom: 10px;
+  }
+
+  .page.cotizacion .radio-item{
+    padding: 12px 12px; /* antes 16 18 */
+    margin-top: 12px;
+    border-radius: 12px;
+    gap: 10px;
+    font-size: 15px;
+  }
+
+  .page.cotizacion .radio-item span{
+    font-size: 15px;
+  }
+
+  .page.cotizacion .radio-item input[type="radio"]{
+    width: 18px;
+    height: 18px;
+  }
+
+  /* panel */
+  .page.cotizacion .panel{
+    padding: 12px 12px;
+    border-radius: 12px;
+  }
+
+  .page.cotizacion .panel-title{
+    font-size: 16px;  /* antes 22 */
+    margin-bottom: 10px;
+  }
+
+  /* selects "wrap" */
+  .page.cotizacion #diasWrap.field,
+  .page.cotizacion #comunaWrap.field{
+    padding: 12px 12px;
+    border-radius: 12px;
+  }
+
+  .page.cotizacion #diasWrap.field > select,
+  .page.cotizacion #comunaWrap.field > select{
+    height: 42px;
+    padding: 10px 40px 10px 11px;
+    border-radius: 12px;
+    font-size: 16px;
+  }
+
+  /* flechas: ajusta posición para que no queden raras */
+  .page.cotizacion #diasWrap.field::after{
+    right: 14px;
+    transform: translateX(-6px) translateY(7px) rotate(45deg);
+  }
+  .page.cotizacion #comunaWrap.field::after{
+    right: 14px;
+    transform: translateX(2px) translateY(10px) rotate(45deg);
+  }
+
+  /* la fila dia-row ya la haces 1 columna en <=600, pero mejoramos padding */
+  .page.cotizacion .dia-row{
+    padding: 12px 12px;
+    border-radius: 12px;
+    gap: 10px;
+  }
+
+  .page.cotizacion .dia-row .select,
+  .page.cotizacion .dia-row .input{
+    font-size: 16px;
+    padding: 10px 11px;
+    border-radius: 10px;
+  }
+
+  /* date picker */
+  .page.cotizacion .date-control{
+    grid-template-columns: 1fr 44px;
+    gap: 8px;
+  }
+
+  .page.cotizacion .date-control .date-input,
+  .page.cotizacion .date-input{
+    height: 42px;
+    padding: 10px 11px;
+    font-size: 16px;
+  }
+
+  .page.cotizacion .date-control .date-btn,
+  .page.cotizacion .date-btn{
+    width: 44px;
+    height: 42px;
+  }
+
+  .page.cotizacion .date-pop{
+    right: 0;
+    left: auto;
+    width: min(340px, calc(100vw - (var(--mx) * 2)));
+  }
+
+  /* errores/avisos */
+  .page.cotizacion .req{
+    font-size: 16px; /* antes 22 */
+  }
+
+  .turno-error{
+    font-size: 14px;
+    min-height: 14px;
+  }
+
+  .warn-box{
+    font-size: 14px;
+    padding: 10px 12px;
+  }
+
+  /* ocasional: en mobile mejor 1 columna */
+  .ocasional-times{
+    grid-template-columns: 1fr; /* antes 1fr 1fr */
+    gap: 10px;
+  }
+
+  .ocasional-turno{
+    padding: 10px;
+    border-radius: 12px;
+  }
+
+  .chip{
+    font-size: 12px;
+    padding: 6px 9px;
+  }
+}

@@ -123,3 +123,87 @@
   border: 1px solid #e8eeff;
   overflow: hidden;
 }
+
+/* =========================
+   MOBILE: grupo-familiar (pegar al final)
+========================= */
+@media (max-width: 640px) {
+  .page.grupo-familiar .radio-group{
+    margin: 10px 0 16px;
+  }
+
+  .page.grupo-familiar .radio-question{
+    margin: 0 0 10px;
+  }
+
+  .page.grupo-familiar .radio-group legend{
+    font-size: 16px;     /* antes 22 */
+    margin-bottom: 10px;
+  }
+
+  .page.grupo-familiar .radio-item{
+    padding: 12px 12px;  /* antes 16 18 */
+    margin-top: 12px;
+    border-radius: 12px;
+    gap: 10px;
+  }
+
+  .page.grupo-familiar .radio-item input[type="radio"]{
+    width: 18px;
+    height: 18px;
+  }
+
+  .page.grupo-familiar .radio-text{
+    font-size: 14px;
+    line-height: 1.35;
+  }
+
+  .page.grupo-familiar hr{
+    margin-bottom: 22px; /* antes 35 */
+  }
+
+  .page.grupo-familiar .kid-title{
+    font-size: 17px;     /* antes 23 */
+    margin: 14px 0 8px;
+  }
+
+  .page.grupo-familiar .kid-block{
+    padding: 12px 12px;  /* antes 16 18 */
+    margin-top: 12px;
+    border-radius: 12px;
+  }
+
+  .page.grupo-familiar .kid-block label{
+    font-size: 14px;     /* antes 21 */
+  }
+
+  .page.grupo-familiar .kid-block input{
+    max-width: 100%;
+    font-size: 16px;     /* antes 18 */
+    padding: 10px 11px;
+  }
+
+  .page.grupo-familiar .kid-block .field{
+    margin: 8px 0;
+  }
+
+  /* fecha */
+  .page.grupo-familiar .kid-nac{
+    height: 42px;        /* antes 44 */
+    font-size: 16px;
+    padding: 10px 11px;
+  }
+
+  .page.grupo-familiar .kid-nac,
+  .page.grupo-familiar .flatpickr-input{
+    font-size: 16px;     /* importante para mobile */
+    padding: 10px 11px;
+    border-radius: 12px;
+  }
+
+  /* calendario */
+  .page.grupo-familiar .flatpickr-calendar{
+    border-radius: 14px;
+  }
+}
+
