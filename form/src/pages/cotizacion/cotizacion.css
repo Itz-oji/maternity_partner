@@ -624,3 +624,8 @@
   transform: translateX(-7px) translateY(-12px); /* mueve SOLO la X */
   color: #1f3fbf;
 }
+
+.is-invalid {
+  border-color: #d93025 !important;
+  box-shadow: 0 0 0 3px rgba(217,48,37,0.15) !important;
+}

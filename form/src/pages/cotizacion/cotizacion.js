@@ -53,6 +53,126 @@ export const cotizacionPage = {
     // Config
     const MAX_FECHAS_OCASIONAL = 10;
 
+    // let showErrors = false;
+
+    // function setShowErrors(v) {
+    //   showErrors = !!v;
+    //   if (!showErrors) clearInvalidUI();
+    // }
+
+    // function clearInvalidUI() {
+    //   container.querySelectorAll(".is-invalid").forEach((n) => n.classList.remove("is-invalid"));
+    // }
+
+    // function markRadioGroupInvalid(name, bad) {
+    //   const inputs = [...container.querySelectorAll(`input[name="${name}"]`)];
+    //   const first = inputs[0];
+    //   if (!first) return;
+
+    //   const invalid = !!bad;
+
+    //   // marca cada radio
+    //   inputs.forEach(r => r.classList.toggle("is-invalid", invalid));
+
+    //   // marca los labels bonitos si tienes .radio-item
+    //   inputs.forEach(r => r.closest(".radio-item")?.classList.toggle("is-invalid", invalid));
+
+    //   // marca el fieldset si existe
+    //   first.closest("fieldset")?.classList.toggle("is-invalid", invalid);
+    // }
+
+    // function markInvalid(el, bad) {
+    //   if (!el) return;
+
+    //   const invalid = !!bad;
+
+    //   // 1) Flatpickr: el usuario ve el altInput, no el input original
+    //   const fp = el._flatpickr;
+    //   if (fp?.altInput) {
+    //     fp.altInput.classList.toggle("is-invalid", invalid);
+    //   }
+
+    //   // 2) Siempre marca el input real también (por si acaso)
+    //   el.classList.toggle("is-invalid", invalid);
+
+    //   // 3) Si existe un wrapper (recomendado), márcalo también
+    //   const wrap = el.closest?.(".field") || el.closest?.(".form-line") || el.parentElement;
+    //   wrap?.classList?.toggle("is-invalid", invalid);
+    // }
+
+    // function validateAndPaint(force = false) {
+    //   if (!showErrors && !force) return;
+
+    //   const tipo = String(getField("tipoServicio") ?? "").trim().toLowerCase();
+    //   const turno = String(getField("turnoAdaptativo") ?? "").trim().toLowerCase();
+
+    //   // base
+    //   markInvalid(comuna, !String(getField("comuna") ?? "").trim());
+    //   markInvalid(direccion, !String(getField("direccion") ?? "").trim());
+
+    //   // radios (grupos)
+    //   markRadioGroupInvalid("transporte", !String(getField("transporte") ?? "").trim());
+    //   markRadioGroupInvalid("tipoServicio", !String(getField("tipoServicio") ?? "").trim());
+    //   markRadioGroupInvalid("turnoAdaptativo", !String(getField("turnoAdaptativo") ?? "").trim());
+
+    //   // fechas (flatpickr)
+    //   markInvalid(fechaInicioInput, !String(getField("fechaInicio") ?? "").trim());
+    //   markInvalid(fechaAdaptativaInput, turno === "si" && !String(getField("fechaAdaptativa") ?? "").trim());
+
+    //   // periódico: select días y filas
+    //     if (tipo === "periodico") {
+    //       markInvalid(diasSemana, !String(getField("diasSemana") ?? "").trim());
+
+    //       // validar filas dinámicas visibles
+    //       const rows = [...container.querySelectorAll("#diasHorariosWrap .dia-row, #diasHorariosWrap [data-row]")];
+    //       // si no tienes clases, igual podemos ir por inputs:
+    //       const selDias = [...container.querySelectorAll("#diasHorariosWrap .js-dia")];
+    //       const inicios = [...container.querySelectorAll("#diasHorariosWrap .js-inicio")];
+    //       const terminos = [...container.querySelectorAll("#diasHorariosWrap .js-termino")];
+
+    //       selDias.forEach((sel, i) => {
+    //         const ini = inicios[i];
+    //         const ter = terminos[i];
+
+    //         const diaOk = !!String(sel?.value ?? "").trim();
+    //         const iniOk = !!String(ini?.value ?? "").trim();
+    //         const terOk = !!String(ter?.value ?? "").trim();
+
+    //         // si hay valores, valida regla >=4h
+    //         const horasOk = (iniOk && terOk) ? diffHours(ini.value, ter.value) != null : false;
+
+    //         markInvalid(sel, !diaOk);
+    //         markInvalid(ini, !iniOk || (iniOk && terOk && !horasOk));
+    //         markInvalid(ter, !terOk || (iniOk && terOk && !horasOk));
+    //       });
+    //     } else {
+    //       markInvalid(diasSemana, false);
+    //     }
+
+    //     // ocasional: multi-fechas + turnos por fecha
+    //     if (tipo === "ocasional") {
+    //       const turnos = getTurnosOcasionales();
+    //       markInvalid(fechasOcasionalesInput, !turnos.length);
+
+    //       // pinta inputs de horas por fecha
+    //       const inicioEls = [...container.querySelectorAll(".js-ocasional-inicio")];
+    //       const terminoEls = [...container.querySelectorAll(".js-ocasional-termino")];
+
+    //       inicioEls.forEach((ini, i) => {
+    //         const ter = terminoEls[i];
+    //         const iniOk = !!String(ini?.value ?? "").trim();
+    //         const terOk = !!String(ter?.value ?? "").trim();
+    //         const horasOk = (iniOk && terOk) ? diffHours(ini.value, ter.value) != null : false;
+
+    //         markInvalid(ini, !iniOk || (iniOk && terOk && !horasOk));
+    //         markInvalid(ter, !terOk || (iniOk && terOk && !horasOk));
+    //       });
+    //     } else {
+    //       markInvalid(fechasOcasionalesInput, false);
+    //     }
+    //   }
+
+
     /* =========================
        Helpers UI
     ========================= */
@@ -183,7 +303,7 @@ export const cotizacionPage = {
        Flatpickr base (1 fecha)
     ========================= */
 
-    function wireFlatpickr(inputEl, storeKey, options = {}) {
+    function wireFlatpickr(inputEl, storeKey, onISOChange = null, options = {}) {
       if (!inputEl) return null;
 
       const fpLib = window.flatpickr;
@@ -192,7 +312,10 @@ export const cotizacionPage = {
         return null;
       }
 
-      const savedISO = (getField(storeKey) ?? "").trim();
+      const savedISO = (getField(storeKey) ?? "").trim(); // "YYYY-MM-DD"
+
+      // evitamos que options pueda pisar onChange
+      const { onChange: _ignoredOnChange, ...safeOptions } = options || {};
 
       const fp = fpLib(inputEl, {
         locale: fpLib?.l10ns?.es ?? undefined,
@@ -215,8 +338,9 @@ export const cotizacionPage = {
           if (!d) return;
           const iso = fp.formatDate(d, "Y-m-d");
           updateField(storeKey, iso);
+          if (typeof onISOChange === "function") onISOChange(iso);
         },
-        ...options,
+        ...safeOptions,
       });
 
       inputEl.addEventListener("focus", () => fp.open());
@@ -280,6 +404,7 @@ export const cotizacionPage = {
           validateRow();
           updateNocturnoWarning();
           calculateHorasMensuales();
+          // validateAndPaint();
         };
 
         inpInicio?.addEventListener("change", saveRow);
@@ -295,6 +420,7 @@ export const cotizacionPage = {
           renderTurnosOcasionales();
           updateNocturnoWarning();
           calculateHorasMensuales();
+          // validateAndPaint();
         });
 
         validateRow();
@@ -358,6 +484,7 @@ export const cotizacionPage = {
           renderTurnosOcasionales();
           updateNocturnoWarning();
           calculateHorasMensuales();
+          // validateAndPaint();
         },
       });
 
@@ -722,11 +849,14 @@ export const cotizacionPage = {
     if (checkedAdapt) checkedAdapt.checked = true;
 
     // Flatpickr (1 fecha)
-    wireFlatpickr(fechaInicioInput, "fechaInicio", {
-      onChange: () => calculateHorasMensuales(),
+    wireFlatpickr(fechaInicioInput, "fechaInicio", () => {
+      calculateHorasMensuales();
+      // validateAndPaint(false);
     });
 
-    wireFlatpickr(fechaAdaptativaInput, "fechaAdaptativa");
+    wireFlatpickr(fechaAdaptativaInput, "fechaAdaptativa", () => {
+      // validateAndPaint(false);
+    });
 
     // Flatpickr (ocasional multi)
     wireFlatpickrMultiple(fechasOcasionalesInput);
@@ -738,18 +868,26 @@ export const cotizacionPage = {
     calculateHorasMensuales();
     renderHorasMensualesUI();
     updateNocturnoWarning();
+    // validateAndPaint(false);
 
     /* =========================
        Listeners
     ========================= */
 
-    if (comuna) comuna.addEventListener("change", (e) => updateField("comuna", e.target.value));
-    if (direccion) direccion.addEventListener("input", (e) => updateField("direccion", e.target.value.trim()));
+    if (comuna) comuna.addEventListener("change", (e) => {
+      updateField("comuna", e.target.value);
+      // validateAndPaint();
+    });
+    if (direccion) direccion.addEventListener("input", (e) => {
+      updateField("direccion", e.target.value.trim());
+      // validateAndPaint();
+    });
 
     radios.forEach((r) => {
       r.addEventListener("change", () => {
         updateField("transporte", r.value);
         refreshSelectedUI();
+        // validateAndPaint();
       });
     });
 
@@ -759,6 +897,7 @@ export const cotizacionPage = {
         toggleTipoServicioUI();
         updateNocturnoWarning();
         calculateHorasMensuales();
+        // validateAndPaint();
       });
     });
 
@@ -767,6 +906,7 @@ export const cotizacionPage = {
         updateField("diasSemana", e.target.value);
         renderDiasRows(e.target.value);
         calculateHorasMensuales();
+        // validateAndPaint();
       });
     }
 
@@ -774,24 +914,25 @@ export const cotizacionPage = {
       r.addEventListener("change", () => {
         updateField("turnoAdaptativo", r.value);
         toggleFechaAdaptativa();
+        // validateAndPaint();
       });
     });
   },
 
   validate({ required }) {
-    const tipo = getField("tipoServicio") ?? "";
-    const turno = getField("turnoAdaptativo");
+    const tipoRaw = getField("tipoServicio");
+    const tipo = String(tipoRaw ?? "").trim().toLowerCase();
+    const turno = String(getField("turnoAdaptativo") ?? "").trim().toLowerCase();
 
-    const baseOk =
-      required(getField("comuna")) &&
-      required(getField("direccion")) &&
-      required(getField("transporte")) &&
-      required(tipo) &&
-      required(getField("fechaInicio")) &&
-      required(getField("turnoAdaptativo")) &&
-      required(turno) &&
-      (turno !== "si" || required(getField("fechaAdaptativa")));
+    const comunaOk = required(getField("comuna"));
+    const dirOk = required(getField("direccion"));
+    const transpOk = required(getField("transporte"));
+    const tipoOk = required(tipo);
+    const fechaInicioOk = required(getField("fechaInicio"));
+    const turnoOk = required(turno);
+    const fechaAdaptOk = (turno !== "si") || required(getField("fechaAdaptativa"));
 
+    const baseOk = comunaOk && dirOk && transpOk && tipoOk && fechaInicioOk && turnoOk && fechaAdaptOk;
     if (!baseOk) return false;
 
     if (tipo === "periodico") {
@@ -799,22 +940,22 @@ export const cotizacionPage = {
     }
 
     if (tipo === "ocasional") {
-      const turnos = (() => {
-        const raw = getField("turnosOcasionales");
-        if (!raw) return [];
-        if (Array.isArray(raw)) return raw;
-        try { return JSON.parse(raw); } catch { return []; }
-      })();
+      const raw = getField("turnosOcasionales");
+      let turnos = [];
+      if (Array.isArray(raw)) turnos = raw;
+      else if (raw) {
+        try { turnos = JSON.parse(raw); } catch { turnos = []; }
+      }
 
-      if (!turnos.length) return false;
+      if (!Array.isArray(turnos) || turnos.length === 0) return false;
 
-      // todos deben tener mínimo 4 horas válidas
       const timeToMinutes = (hhmm) => {
         if (!hhmm || typeof hhmm !== "string") return null;
         const [h, m] = hhmm.split(":").map(Number);
         if (!Number.isFinite(h) || !Number.isFinite(m)) return null;
         return h * 60 + m;
       };
+
       const diffHours = (inicio, termino) => {
         const a = timeToMinutes(inicio);
         const b = timeToMinutes(termino);
@@ -822,14 +963,17 @@ export const cotizacionPage = {
         let diffMin = b - a;
         if (diffMin <= 0) diffMin += 24 * 60;
         const hours = diffMin / 60;
-        if (hours < 4) return null;
-        return hours;
+        return hours >= 4 ? hours : null;
       };
 
-      return turnos.every((t) => diffHours(t.inicio, t.termino) != null);
+      // ✅ cada turno debe tener fecha + inicio + termino + >= 4h
+      return turnos.every((t) =>
+        required(t?.date) && diffHours(t?.inicio, t?.termino) != null
+      );
     }
 
-    return true;
+    // si el valor es raro, no dejes pasar
+    return false;
   },
 
   errorMessage:
