@@ -28,8 +28,17 @@ function diffHours(inicio, termino) {
   const a = timeToMinutes(inicio);
   const b = timeToMinutes(termino);
   if (a == null || b == null) return null;
-  if (b <= a) return null;
-  return (b - a) / 60;
+
+  // ✅ Soporta nocturnos: si termina "antes" o igual, es al día siguiente
+  let diffMin = b - a;
+  if (diffMin <= 0) diffMin += 24 * 60;
+
+  const hours = diffMin / 60;
+
+  // ✅ Mínimo 4 horas por turno
+  if (hours < 4) return null;
+
+  return hours;
 }
 
 function normalizeWeekdayValue(val) {

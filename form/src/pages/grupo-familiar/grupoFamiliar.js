@@ -1,6 +1,7 @@
 import { loadHtml } from "../../utils/loadHtml.js";
 import { getField, updateField } from "../../store.js";
 import { formatRut } from "../../utils/rutFormat.js";
+import { yearGridPlugin } from "../../utils/flatpickrYearGrid.js";
 
 function ensureKidsArray(n) {
   const current = getField("ninos") ?? [];
@@ -54,32 +55,50 @@ function renderKids(container, count) {
       updateField("ninos", kidsNow);
     });
 
-    nacEl.addEventListener("input", (e) => {
+    // --- Nacimiento: valor guardado (guardaremos ISO: YYYY-MM-DD) ---
+    nacEl.value = k.nacimiento ?? "";
+
+    // Guardar (fallback si no carga flatpickr)
+    nacEl.addEventListener("change", (e) => {
       const kidsNow = ensureKidsArray(count);
       kidsNow[i].nacimiento = e.target.value;
       updateField("ninos", kidsNow);
     });
 
+    // Bloquear escritura manual
     nacEl.addEventListener("keydown", (e) => e.preventDefault());
     nacEl.addEventListener("paste", (e) => e.preventDefault());
 
-    // 📅 Abre el calendario automáticamente
-    const openPicker = () => {
-        if (typeof nacEl.showPicker === "function") {
-            nacEl.showPicker();
-        }
-    };
-
-    nacEl.addEventListener("click", openPicker);
-    nacEl.addEventListener("focus", openPicker);
-
+    // Flatpickr por cada niño/a
     if (window.flatpickr) {
-        window.flatpickr(nacEl, {
-            dateFormat: "d/m/Y",     // lo que ve el usuario
-            allowInput: false,       // no permite escribir a mano
-            maxDate: "today",
-            disableMobile: true      // fuerza el calendario bonito en móvil también
-        });
+      const fp = window.flatpickr(nacEl, {
+        dateFormat: "Y-m-d",
+        altInput: true,
+        altFormat: "d/m/Y",
+        maxDate: "today",
+        disableMobile: true,
+        allowInput: false,
+        locale: window.flatpickr?.l10ns?.es ?? undefined,
+        plugins: [
+          yearGridPlugin({
+            yearsPerPage: 12,
+            columns: 3,
+            minYear: 1900,
+            maxYear: new Date().getFullYear(),
+          }),
+        ],
+        defaultDate: k.nacimiento || null,
+
+        onChange: (selectedDates, dateStr) => {
+          const kidsNow = ensureKidsArray(count);
+          kidsNow[i].nacimiento = dateStr; // YYYY-MM-DD
+          updateField("ninos", kidsNow);
+        },
+      });
+
+      // Abre al foco/click (por si readonly en algunos navegadores)
+      nacEl.addEventListener("focus", () => fp.open());
+      nacEl.addEventListener("click", () => fp.open());
     }
 
 

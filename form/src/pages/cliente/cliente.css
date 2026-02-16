@@ -45,3 +45,107 @@
   border-color: #2e69ff;
   box-shadow: 0 0 0 4px rgba(46,105,255,0.12);
 }
+
+/* Botón del año en la cabecera */
+.fp-yearbtn {
+  margin-left: 10px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  border: 1px solid #d6e2ff;
+  background: #ffffff;
+  cursor: pointer;
+  font-weight: 700;
+  color: #1f2a44;
+}
+
+.fp-yearbtn:hover {
+  border-color: #2e69ff;
+  box-shadow: 0 0 0 3px rgba(46, 105, 255, 0.12);
+}
+
+/* Overlay rejilla años */
+.fp-yeargrid {
+  padding: 12px;
+  background: #ffffff;
+}
+
+.fp-yeargrid__head {
+  display: grid;
+  grid-template-columns: 40px 1fr 40px;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.fp-yeargrid__nav {
+  border: 1px solid #d6e2ff;
+  background: #f7faff;
+  border-radius: 10px;
+  padding: 8px 0;
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.fp-yeargrid__title {
+  border: 1px solid #e8eeff;
+  background: #f7faff;
+  border-radius: 12px;
+  padding: 10px 12px;
+  cursor: pointer;
+  font-weight: 800;
+  color: #1f2a44;
+}
+
+.fp-yeargrid__grid {
+  display: grid;
+  gap: 10px;
+}
+
+.fp-yeargrid__year {
+  border: 2px solid #111;
+  background: #fff;
+  border-radius: 6px;
+  padding: 12px 10px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.fp-yeargrid__year:hover {
+  border-color: #2e69ff;
+  box-shadow: 0 0 0 3px rgba(46, 105, 255, 0.12);
+}
+
+.fp-yeargrid__year.is-active {
+  border-color: #2e69ff;
+  background: rgba(46, 105, 255, 0.08);
+}
+
+/* El contenedor del mes/año en flatpickr */
+.flatpickr-current-month {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Botón del año: mismo tamaño/alto que el texto original */
+.fp-yearbtn {
+  border: none;
+  background: transparent;
+  padding: 0 6px;
+  margin: 0;
+  height: 28px;
+  line-height: 28px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 400;
+  color: inherit;
+}
+
+.fp-yearbtn:hover {
+  background: rgba(46, 105, 255, 0.10);
+}
+
+.fp-yearbtn:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(46, 105, 255, 0.18);
+}

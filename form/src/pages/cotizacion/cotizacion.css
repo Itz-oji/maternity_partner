@@ -310,3 +310,317 @@
   background: var(--input-bg);
   outline: none;
 }
+
+/* ===============================
+   CALENDARIO (CALLY) — FIX + LOOK
+   Pegar al FINAL del CSS
+   =============================== */
+
+/* Contenedor del datepicker: debe ser relativo para el popover */
+.page.cotizacion .date-picker{
+  position: relative;
+  margin-left: var(--mx);
+  margin-right: var(--mx);
+  box-sizing: border-box;
+}
+
+/* Input + botón en una línea (como tus otros inputs) */
+.page.cotizacion .date-control{
+  display: grid;
+  grid-template-columns: 1fr 46px;
+  gap: 10px;
+  align-items: center;
+}
+
+.page.cotizacion .date-control .date-input{
+  height: 44px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--input-bg);
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.page.cotizacion .date-control .date-btn{
+  height: 44px;
+  width: 46px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.85);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+/* Popover del calendario: bien posicionado, sin “caerse” */
+.page.cotizacion .date-pop{
+  position: absolute;
+  top: calc(44px + 10px);
+  left: 0;
+  z-index: 50;
+
+  width: min(340px, calc(100vw - (var(--mx) * 2)));
+  padding: 12px;
+  border-radius: 14px;
+
+  background: rgba(255,255,255,0.96);
+  border: 1px solid var(--border);
+  box-shadow: 0 18px 50px rgba(0,0,0,0.18);
+}
+
+/* Asegura que los estilos globales no “rompan” el calendario */
+.page.cotizacion .date-pop *{
+  box-sizing: border-box;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+}
+
+/* Cally: tamaño y reset de tipografía */
+.page.cotizacion .date-pop calendar-date,
+.page.cotizacion .date-pop calendar-month{
+  width: 100%;
+  font-size: 16px;
+  font-weight: 400;
+}
+
+/* Evita que tus labels/legend globales afecten al calendario si Cally usa texto interno */
+.page.cotizacion .date-pop label,
+.page.cotizacion .date-pop legend{
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+}
+
+/* Botones internos del calendario (Prev/Next) si aparecen como links/botones */
+.page.cotizacion .date-pop button,
+.page.cotizacion .date-pop a{
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
+  text-decoration: none;
+}
+
+/* Opcional: el calendario no debe empujar nada alrededor */
+.page.cotizacion .date-pop[hidden]{
+  display: none !important;
+}
+
+/* =========================
+   DATE PICKER (Cally) POPUP
+   ========================= */
+
+.page.cotizacion .date-picker{
+  position: relative; /* ✅ clave */
+  display: grid;
+  grid-template-columns: 1fr 46px;
+  gap: 10px;
+  align-items: center;
+}
+
+.page.cotizacion .date-input{
+  width: 100%;
+  height: 44px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--input-bg);
+  outline: none;
+}
+
+.page.cotizacion .date-btn{
+  width: 46px;
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.85);
+  cursor: pointer;
+}
+
+/* ✅ el popup */
+.page.cotizacion .date-pop{
+  position: absolute;
+  top: calc(44px + 10px);
+  right: 0;          /* se alinea a la derecha del input */
+  z-index: 9999;
+
+  width: min(340px, calc(100vw - (var(--mx) * 2)));
+  padding: 12px;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.98);
+  border: 1px solid var(--border);
+  box-shadow: 0 18px 50px rgba(0,0,0,0.18);
+}
+
+.page.cotizacion .date-pop[hidden]{
+  display: none !important;
+}
+
+/* ✅ evita que cally “ensucie” layout */
+.page.cotizacion .date-cal{
+  display: block;
+}
+
+.date-input,
+.flatpickr-input {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid #d6e2ff;
+  background: #f7faff;
+  font-size: 14px;
+  transition: 0.2s ease;
+  cursor: pointer;
+}
+
+.date-input:focus,
+.flatpickr-input:focus {
+  outline: none;
+  border-color: #2e69ff;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(46, 105, 255, 0.15);
+}
+
+/* Popup bonito */
+.flatpickr-calendar {
+  border-radius: 16px;
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.18);
+  border: 1px solid #e8eeff;
+  overflow: hidden;
+}
+
+/* Meses/días en header */
+.flatpickr-months {
+  background: #f7faff;
+  border-bottom: 1px solid #e8eeff;
+}
+
+.flatpickr-day.selected,
+.flatpickr-day.startRange,
+.flatpickr-day.endRange {
+  background: #2e69ff !important;
+  border-color: #2e69ff !important;
+  color: #fff !important;
+}
+
+.turno-error {
+  margin-top: 6px;
+  font-size: 16px;
+  color: #d93025;
+  font-weight: 600;
+  min-height: 16px;
+}
+
+.warn-box{
+  margin-top: 12px;
+  border: 1px solid #ffe08a;
+  background: #fff8e6;
+  color: #5b4200;
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-size: 16px;
+  line-height: 1.35;
+}
+
+.warn-box strong{
+  display:block;
+  margin-bottom: 6px;
+}
+
+.warn-text{
+  opacity: .95;
+}
+
+/* Ocasional */
+.ocasional-times{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.chips{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.chip{
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(46, 105, 255, 0.12);
+  border: 1px solid rgba(46, 105, 255, 0.22);
+  font-size: 13px;
+}
+
+.chip button{
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  opacity: 0.8;
+}
+.chip button:hover{ opacity: 1; }
+
+/* Ocasional: lista de turnos por fecha */
+.ocasional-turnos{
+  display: grid;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.ocasional-turno{
+  background: rgba(255,255,255,0.75);
+  border: 1px solid rgba(0,0,0,0.06);
+  border-radius: 14px;
+  padding: 12px;
+}
+
+.ocasional-head{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.ocasional-date{
+  font-weight: 650;
+}
+
+.ocasional-remove{
+  border: none;
+  background: rgba(46,105,255,0.12);
+  border: 1px solid rgba(46,105,255,0.25);
+  color: #1f3fbf;
+  border-radius: 999px;
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
+}
+.ocasional-remove:hover{ filter: brightness(0.98); }
+
+.ocasional-times{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.ocasional-remove{
+  position: relative;
+  color: transparent; /* ocultas el ✕ original */
+}
+
+.ocasional-remove::before{
+  content: "✕";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translateX(-7px) translateY(-12px); /* mueve SOLO la X */
+  color: #1f3fbf;
+}

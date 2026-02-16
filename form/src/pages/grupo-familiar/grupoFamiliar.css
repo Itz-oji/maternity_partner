@@ -94,3 +94,32 @@
   font-size: 16px;
   padding: 10px 12px;
 }
+
+/* input de fecha dentro de kids */
+.kid-nac,
+.flatpickr-input {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid #d6e2ff;
+  background: #f7faff;
+  font-size: 14px;
+  transition: 0.2s ease;
+  cursor: pointer;
+}
+
+.kid-nac:focus,
+.flatpickr-input:focus {
+  outline: none;
+  border-color: #2e69ff;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(46, 105, 255, 0.15);
+}
+
+/* popup bonito */
+.flatpickr-calendar {
+  border-radius: 16px;
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.18);
+  border: 1px solid #e8eeff;
+  overflow: hidden;
+}

@@ -4,6 +4,8 @@ import { canGoBack, canGoNext, getCurrentPage, getPageCount, getPageIndex, go } 
 import * as V from "./validators.js";
 import { calcularHorasMensuales } from "./utils/calculoHoras.js";
 import { calcularPrecioBase, formatCLP } from "./utils/calcularPrecio.js";
+import flatpickr from "https://esm.sh/flatpickr@4.6.13";
+import { Spanish } from "https://esm.sh/flatpickr@4.6.13/dist/l10n/es.js";
 
 /* =========================
    CONFIG: Apps Script
@@ -20,6 +22,11 @@ const sendingView = document.getElementById("sendingView");
 const thanksView = document.getElementById("thanksView");
 const footer = document.getElementById("footer");
 const actions = document.getElementById("actions");
+
+// opcional: dejarlo global para usarlo en páginas
+window.flatpickr = flatpickr;
+window.flatpickrSpanish = Spanish;
+
 
 let alreadySubmitted = false;
 

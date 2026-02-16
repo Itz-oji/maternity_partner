@@ -85,11 +85,18 @@
         </fieldset>
     </div>
 
-    <!-- FECHA -->
+  <!-- FECHA INICIO -->
+
     <div class="field">
-    <label for="fechaInicio">¿En qué fecha deseas partir? <span class="req">*</span></label>
-    <input id="fechaInicio" type="date" />
-    <small class="helper">Fecha</small>
+      <label for="fechaInicioInput">¿En qué fecha deseas partir? <span class="req">*</span></label>
+
+      <div class="date-picker" data-key="fechaInicio">
+        <input id="fechaInicioInput" class="date-input" type="text" placeholder="Selecciona una fecha" readonly   autocomplete="off"/>
+
+        <div class="date-pop" hidden>
+          <calendar-date class="date-cal"></calendar-date>
+        </div>
+      </div>
     </div>
 
     <!-- TURNO ADAPTATIVO -->
@@ -110,11 +117,17 @@
         <span>No</span>
     </label>
     </fieldset>
+    <!-- FECHA ADAPTATIVA -->
     <div class="field" id="fechaAdaptativaWrap" style="display:none;">
-        <label for="fechaAdaptativa">
-            Fecha del turno adaptativo <span class="req">*</span>
-        </label>
-        <input id="fechaAdaptativa" type="date" />
+      <label for="fechaAdaptativaInput">Fecha del turno adaptativo <span class="req">*</span></label>
+
+      <div class="date-picker" data-key="fechaAdaptativa">
+        <input id="fechaAdaptativaInput" class="date-input" type="text" placeholder="Selecciona una fecha" readonly autocomplete="off" />
+
+        <div class="date-pop" hidden>
+          <calendar-date class="date-cal"></calendar-date>
+        </div>
+      </div>
     </div>
 
 
@@ -160,8 +173,53 @@
             <label>Hora término</label>
             <input class="input js-termino" type="time" />
             </div>
+
+            <div class="turno-error"></div>
         </div>
     </template>
+
+    <!-- SOLO si es Ocasional -->
+    <div class="field" id="ocasionalWrap" style="display:none;">
+      <label for="fechasOcasionalesInput">
+        Selecciona las fechas del mes (puedes elegir varias) <span class="req">*</span>
+      </label>
+
+      <div class="date-picker" data-key="fechasOcasionales">
+        <input
+          id="fechasOcasionalesInput"
+          class="date-input"
+          type="text"
+          placeholder="Selecciona 1 o más fechas"
+          readonly
+          autocomplete="off"
+        />
+      </div>
+
+      <div id="ocasionalTurnosList" class="ocasional-turnos"></div>
+
+      <template id="ocasionalTurnoTemplate">
+        <div class="ocasional-turno">
+          <div class="ocasional-head">
+            <div class="ocasional-date js-ocasional-date">05/02/2026</div>
+            <button type="button" class="ocasional-remove js-ocasional-remove" aria-label="Quitar fecha">✕</button>
+          </div>
+
+          <div class="ocasional-times">
+            <div class="col">
+              <label>Hora inicio <span class="req">*</span></label>
+              <input class="input js-ocasional-inicio" type="time" />
+            </div>
+
+            <div class="col">
+              <label>Hora término <span class="req">*</span></label>
+              <input class="input js-ocasional-termino" type="time" />
+            </div>
+          </div>
+
+          <div class="turno-error js-ocasional-error"></div>
+        </div>
+      </template>
+    </div>
 
     <p>Total horas mensuales: <strong id="horasMensualesTxt">0</strong></p>
 </section>
@@ -191,3 +249,11 @@
     </div>
   </form>
 </dialog>
+
+<div id="nocturnoWarning" class="warn-box" hidden>
+  <strong>Turno nocturno detectado</strong>
+  <div class="warn-text">
+    Si el turno cruza medianoche (ej: 23:00–06:00), puede aplicarse un sobrecargo por transporte del/la profesional,
+    sujeto al costo de una aplicación de transporte hasta el domicilio del/la profesional.
+  </div>
+</div>

@@ -1,9 +1,8 @@
 import { loadHtml } from "../../utils/loadHtml.js";
 import { getField, updateField } from "../../store.js";
 import { calcularHorasMensuales } from "../../utils/calculoHoras.js";
-import { calcularPrecioBase, calcularTotalServicio, formatCLP } from "../../utils/calcularPrecio.js";
-
-
+import { calcularPrecioBase, formatCLP } from "../../utils/calcularPrecio.js";
+import { yearGridPlugin } from "../../utils/flatpickrYearGrid.js";
 
 export const cotizacionPage = {
   id: "cotizacion",
@@ -18,32 +17,47 @@ export const cotizacionPage = {
     // --- Transporte (radios) ---
     const radios = [...container.querySelectorAll('input[name="transporte"]')];
 
-    // --- Tipo de servicio + select condicional ---
+    // --- Tipo de servicio ---
     const tipoRadios = [...container.querySelectorAll('input[name="tipoServicio"]')];
     const diasWrap = container.querySelector("#diasWrap");
     const diasSemana = container.querySelector("#diasSemana");
 
-    // --- Fecha inicio ---
-    const fechaInicio = container.querySelector("#fechaInicio");
+    // --- Ocasional UI ---
+    const ocasionalWrap = container.querySelector("#ocasionalWrap");
+    const fechasOcasionalesInput = container.querySelector("#fechasOcasionalesInput");
+    const ocasionalTurnosList = container.querySelector("#ocasionalTurnosList");
+    const ocasionalTurnoTemplate = container.querySelector("#ocasionalTurnoTemplate");
 
     // --- Turno adaptativo ---
     const adaptRadios = [...container.querySelectorAll('input[name="turnoAdaptativo"]')];
     const fechaAdaptativaWrap = container.querySelector("#fechaAdaptativaWrap");
-    const fechaAdaptativa = container.querySelector("#fechaAdaptativa");
 
-    // --- Días + horarios dinámicos ---
+    // --- Periódico (días + horarios) ---
     const diasHorariosWrap = container.querySelector("#diasHorariosWrap");
     const diaRowTemplate = container.querySelector("#diaRowTemplate");
 
-    // ✅ UI: texto donde se muestran las horas mensuales
+    // Warning nocturno
+    const nocturnoWarning = container.querySelector("#nocturnoWarning");
+
+    // UI horas
     const horasMensualesTxt = container.querySelector("#horasMensualesTxt");
 
-    // ✅ Modal feriados
+    // Modal feriados
     const feriadosModal = container.querySelector("#feriadosModal");
     const feriadosModalList = container.querySelector("#feriadosModalList");
 
+    // Inputs fecha (Flatpickr)
+    const fechaInicioInput = container.querySelector("#fechaInicioInput");
+    const fechaAdaptativaInput = container.querySelector("#fechaAdaptativaInput");
+
+    // Config
+    const MAX_FECHAS_OCASIONAL = 10;
+
+    /* =========================
+       Helpers UI
+    ========================= */
+
     function openFeriadosModal(items) {
-      // items: [{ date: "YYYY-MM-DD", name: "..." }]
       if (!feriadosModal || !feriadosModalList) return;
 
       feriadosModalList.innerHTML = "";
@@ -75,13 +89,8 @@ export const cotizacionPage = {
         feriadosModalList.appendChild(li);
       });
 
-      // abrir modal
-      if (typeof feriadosModal.showModal === "function") {
-        feriadosModal.showModal();
-      } else {
-        // fallback simple por si el navegador no soporta <dialog>
-        feriadosModal.setAttribute("open", "true");
-      }
+      if (typeof feriadosModal.showModal === "function") feriadosModal.showModal();
+      else feriadosModal.setAttribute("open", "true");
     }
 
     function renderHorasMensualesUI() {
@@ -89,65 +98,313 @@ export const cotizacionPage = {
       if (horasMensualesTxt) horasMensualesTxt.textContent = String(v);
     }
 
+    /* =========================
+       Store helpers
+    ========================= */
+
     function getDiasHorarios() {
       const raw = getField("diasHorarios");
       if (!raw) return [];
       if (Array.isArray(raw)) return raw;
-      try {
-        return JSON.parse(raw);
-      } catch {
-        return [];
-      }
+      try { return JSON.parse(raw); } catch { return []; }
     }
 
     function setDiasHorarios(arr) {
-      // Si tu store SOLO acepta strings, cambia a:
-      // updateField("diasHorarios", JSON.stringify(arr));
       updateField("diasHorarios", arr);
     }
+
+    function getTurnosOcasionales() {
+      const raw = getField("turnosOcasionales");
+      if (!raw) return [];
+      if (Array.isArray(raw)) return raw;
+      try { return JSON.parse(raw); } catch { return []; }
+    }
+
+    function setTurnosOcasionales(arr) {
+      updateField("turnosOcasionales", arr);
+    }
+
+    /* =========================
+       Time helpers + reglas
+    ========================= */
+
+    function timeToMinutes(hhmm) {
+      if (!hhmm || typeof hhmm !== "string") return null;
+      const [h, m] = hhmm.split(":").map(Number);
+      if (!Number.isFinite(h) || !Number.isFinite(m)) return null;
+      return h * 60 + m;
+    }
+
+    // ✅ Regla: sobrecargo si el TURNO TERMINA entre 23:00 y 06:00 (incluye 06:00)
+    function endsInNocturnoWindow(termino) {
+      const b = timeToMinutes(termino);
+      if (b == null) return false;
+
+      const from23 = 23 * 60;
+      const to2359 = 24 * 60 - 1;
+      const to06 = 6 * 60;
+
+      return (b >= from23 && b <= to2359) || (b >= 0 && b <= to06);
+    }
+
+    // diffHours soporta cruce medianoche + mínimo 4 horas
+    function diffHours(inicio, termino) {
+      const a = timeToMinutes(inicio);
+      const b = timeToMinutes(termino);
+      if (a == null || b == null) return null;
+
+      let diffMin = b - a;
+      if (diffMin <= 0) diffMin += 24 * 60;
+
+      const hours = diffMin / 60;
+      if (hours < 4) return null;
+      return hours;
+    }
+
+    function updateNocturnoWarning() {
+      const tipo = getField("tipoServicio") ?? "";
+      let hasNocturno = false;
+
+      if (tipo === "periodico") {
+        const rows = getDiasHorarios();
+        hasNocturno = rows.some((r) => r.termino && endsInNocturnoWindow(r.termino));
+      }
+
+      if (tipo === "ocasional") {
+        const turnos = getTurnosOcasionales();
+        hasNocturno = turnos.some((t) => t.termino && endsInNocturnoWindow(t.termino));
+      }
+
+      if (nocturnoWarning) nocturnoWarning.hidden = !hasNocturno;
+      updateField("turnoNocturno", hasNocturno ? "si" : "");
+    }
+
+    /* =========================
+       Flatpickr base (1 fecha)
+    ========================= */
+
+    function wireFlatpickr(inputEl, storeKey, options = {}) {
+      if (!inputEl) return null;
+
+      const fpLib = window.flatpickr;
+      if (!fpLib) {
+        console.warn("flatpickr no está disponible. Revisa el import en tu entry.");
+        return null;
+      }
+
+      const savedISO = (getField(storeKey) ?? "").trim();
+
+      const fp = fpLib(inputEl, {
+        locale: fpLib?.l10ns?.es ?? undefined,
+        dateFormat: "Y-m-d",
+        altInput: true,
+        altFormat: "d/m/Y",
+        disableMobile: true,
+        allowInput: false,
+        defaultDate: savedISO || null,
+        plugins: [
+          yearGridPlugin({
+            yearsPerPage: 12,
+            columns: 3,
+            minYear: 1900,
+            maxYear: new Date().getFullYear(),
+          }),
+        ],
+        onChange: (selectedDates) => {
+          const d = selectedDates?.[0];
+          if (!d) return;
+          const iso = fp.formatDate(d, "Y-m-d");
+          updateField(storeKey, iso);
+        },
+        ...options,
+      });
+
+      inputEl.addEventListener("focus", () => fp.open());
+      inputEl.addEventListener("click", () => fp.open());
+
+      return fp;
+    }
+
+    /* =========================
+       Ocasional: multi fechas + turnos por fecha
+    ========================= */
+
+    function isoToPretty(iso) {
+      const [Y, M, D] = String(iso).split("-");
+      return `${D}/${M}/${Y}`;
+    }
+
+    function renderTurnosOcasionales() {
+      if (!ocasionalTurnosList || !ocasionalTurnoTemplate) return;
+
+      const turnos = getTurnosOcasionales()
+        .slice()
+        .sort((a, b) => String(a.date).localeCompare(String(b.date)));
+
+      ocasionalTurnosList.innerHTML = "";
+
+      turnos.forEach((t) => {
+        const frag = ocasionalTurnoTemplate.content.cloneNode(true);
+
+        const dateEl = frag.querySelector(".js-ocasional-date");
+        const btnRemove = frag.querySelector(".js-ocasional-remove");
+        const inpInicio = frag.querySelector(".js-ocasional-inicio");
+        const inpTermino = frag.querySelector(".js-ocasional-termino");
+        const errEl = frag.querySelector(".js-ocasional-error");
+
+        if (dateEl) dateEl.textContent = isoToPretty(t.date);
+        if (inpInicio) inpInicio.value = t.inicio || "";
+        if (inpTermino) inpTermino.value = t.termino || "";
+
+        const validateRow = () => {
+          const inicio = inpInicio?.value ?? "";
+          const termino = inpTermino?.value ?? "";
+          if (!inicio || !termino) {
+            if (errEl) errEl.textContent = "";
+            return;
+          }
+          const horas = diffHours(inicio, termino);
+          if (errEl) errEl.textContent = horas == null ? "El turno debe durar al menos 4 horas." : "";
+        };
+
+        const saveRow = () => {
+          const inicio = inpInicio?.value ?? "";
+          const termino = inpTermino?.value ?? "";
+
+          const current = getTurnosOcasionales();
+          const idx = current.findIndex((x) => x.date === t.date);
+          if (idx >= 0) current[idx] = { ...current[idx], inicio, termino };
+
+          setTurnosOcasionales(current);
+
+          validateRow();
+          updateNocturnoWarning();
+          calculateHorasMensuales();
+        };
+
+        inpInicio?.addEventListener("change", saveRow);
+        inpTermino?.addEventListener("change", saveRow);
+
+        btnRemove?.addEventListener("click", () => {
+          const next = getTurnosOcasionales().filter((x) => x.date !== t.date);
+          setTurnosOcasionales(next);
+
+          const fp = fechasOcasionalesInput?._flatpickr;
+          if (fp) fp.setDate(next.map((x) => x.date), true, "Y-m-d");
+
+          renderTurnosOcasionales();
+          updateNocturnoWarning();
+          calculateHorasMensuales();
+        });
+
+        validateRow();
+        ocasionalTurnosList.appendChild(frag);
+      });
+    }
+
+    function wireFlatpickrMultiple(inputEl) {
+      if (!inputEl) return null;
+
+      const fpLib = window.flatpickr;
+      if (!fpLib) {
+        console.warn("flatpickr no está disponible. Revisa el import en tu entry.");
+        return null;
+      }
+
+      const savedTurnos = getTurnosOcasionales();
+      const savedDates = savedTurnos.map((x) => x.date);
+
+      const fp = fpLib(inputEl, {
+        locale: fpLib?.l10ns?.es ?? undefined,
+        mode: "multiple",
+        dateFormat: "Y-m-d",
+        altInput: true,
+        altFormat: "d/m/Y",
+        disableMobile: true,
+        allowInput: false,
+        defaultDate: savedDates.length ? savedDates : null,
+        plugins: [
+          yearGridPlugin({
+            yearsPerPage: 12,
+            columns: 3,
+            minYear: 1900,
+            maxYear: new Date().getFullYear(),
+          }),
+        ],
+        onChange: (selectedDates) => {
+          let picked = (selectedDates || []).map((d) => fp.formatDate(d, "Y-m-d")).sort();
+
+          // límite de fechas
+          if (picked.length > MAX_FECHAS_OCASIONAL) {
+            picked = picked.slice(0, MAX_FECHAS_OCASIONAL);
+            fp.setDate(picked, true, "Y-m-d");
+          }
+
+          // preservar horas previas por fecha
+          const current = getTurnosOcasionales();
+          const map = new Map(current.map((x) => [x.date, x]));
+
+          const next = picked.map((date) => {
+            const prev = map.get(date);
+            return {
+              date,
+              inicio: prev?.inicio ?? "",
+              termino: prev?.termino ?? "",
+            };
+          });
+
+          setTurnosOcasionales(next);
+
+          renderTurnosOcasionales();
+          updateNocturnoWarning();
+          calculateHorasMensuales();
+        },
+      });
+
+      inputEl.addEventListener("focus", () => fp.open());
+      inputEl.addEventListener("click", () => fp.open());
+
+      return fp;
+    }
+
+    /* =========================
+       Periódico: render filas
+    ========================= */
 
     function renderDiasRows(count) {
       if (!diasHorariosWrap || !diaRowTemplate) return;
 
       const n = Number(count || 0);
-
-      // limpiar contenedor
       diasHorariosWrap.innerHTML = "";
 
       if (!n) {
         diasHorariosWrap.style.display = "none";
         setDiasHorarios([]);
-        calculateHorasMensuales(); // ✅ recalcula al borrar
+        updateNocturnoWarning();
+        calculateHorasMensuales();
         return;
       }
 
       diasHorariosWrap.style.display = "grid";
 
       const current = getDiasHorarios();
-
-      // normaliza para mantener lo ya ingresado
       const normalized = Array.from({ length: n }, (_, i) => ({
         dia: current[i]?.dia ?? "",
         inicio: current[i]?.inicio ?? "",
         termino: current[i]?.termino ?? "",
       }));
 
-      // guarda estado normalizado
       setDiasHorarios(normalized);
 
-      // crear filas clonando template
       normalized.forEach((row, i) => {
         const fragment = diaRowTemplate.content.cloneNode(true);
-
-        const rowEl = fragment.querySelector(".dia-row");
-        if (rowEl) rowEl.dataset.index = String(i);
 
         const labelDia = fragment.querySelector(".js-dia-label");
         const selDia = fragment.querySelector(".js-dia");
         const inpInicio = fragment.querySelector(".js-inicio");
         const inpTermino = fragment.querySelector(".js-termino");
+        const errorEl = fragment.querySelector(".turno-error");
 
-        // setear textos/valores
         if (labelDia) labelDia.textContent = `Día ${i + 1}`;
         if (selDia) selDia.value = row.dia;
         if (inpInicio) inpInicio.value = row.inicio;
@@ -155,13 +412,24 @@ export const cotizacionPage = {
 
         const onChange = () => {
           const arr = getDiasHorarios();
+
           arr[i] = {
             dia: selDia?.value ?? "",
             inicio: inpInicio?.value ?? "",
             termino: inpTermino?.value ?? "",
           };
+
           setDiasHorarios(arr);
-          calculateHorasMensuales(); // ✅ recalcula cada vez que cambias algo
+
+          const horas = diffHours(inpInicio?.value, inpTermino?.value);
+          if (inpInicio?.value && inpTermino?.value) {
+            if (errorEl) errorEl.textContent = horas == null ? "El turno debe durar al menos 4 horas." : "";
+          } else {
+            if (errorEl) errorEl.textContent = "";
+          }
+
+          updateNocturnoWarning();
+          calculateHorasMensuales();
         };
 
         selDia?.addEventListener("change", onChange);
@@ -171,16 +439,19 @@ export const cotizacionPage = {
         diasHorariosWrap.appendChild(fragment);
       });
 
-      calculateHorasMensuales(); // ✅ recalcula al terminar de dibujar filas
+      updateNocturnoWarning();
+      calculateHorasMensuales();
     }
-    // ------------------- FERIADOS (Chile) -------------------
-    // Cache en memoria para no pedir lo mismo mil veces
-    const feriadosCache = new Map(); // year -> { set: Set('YYYY-MM-DD'), nameByDate: Map(date->name) }
+
+    /* =========================
+       Feriados (Chile)
+    ========================= */
+
+    const feriadosCache = new Map(); // year -> { set, nameByDate }
 
     async function fetchFeriadosCL(year) {
       if (feriadosCache.has(year)) return feriadosCache.get(year);
 
-      // Nager.Date: feriados públicos del año por país
       const url = `https://date.nager.at/api/v3/PublicHolidays/${year}/CL`;
       const res = await fetch(url);
       if (!res.ok) throw new Error(`No pude obtener feriados (HTTP ${res.status})`);
@@ -188,9 +459,7 @@ export const cotizacionPage = {
 
       const set = new Set();
       const nameByDate = new Map();
-
       for (const h of data) {
-        // h.date => "YYYY-MM-DD"
         set.add(h.date);
         nameByDate.set(h.date, h.localName || h.name || "Feriado");
       }
@@ -200,24 +469,35 @@ export const cotizacionPage = {
       return packed;
     }
 
-    // Devuelve lista de fechas (YYYY-MM-DD) del turno en el mes, desde fechaInicio a fin de mes
+    let lastFeriadoAlertKey = "";
+
+    // util: fechas de ocurrencias desde fechaInicio (para periódico)
     function getFechasTurnoEnMesDesdeInicio(baseDate, rows) {
+      const weekdayMap = {
+        lunes: 1, martes: 2, miercoles: 3, miércoles: 3, jueves: 4, viernes: 5, sabado: 6, sábado: 6, domingo: 7,
+      };
+      const normalizeWeekdayValue = (val) => {
+        if (!val) return null;
+        const key = String(val).toLowerCase().trim();
+        if (weekdayMap[key]) return weekdayMap[key];
+        const num = Number(val);
+        if (num >= 1 && num <= 7) return num;
+        return null;
+      };
+
       const year = baseDate.getFullYear();
       const month0 = baseDate.getMonth();
       const startDay = baseDate.getDate();
       const daysInMonth = new Date(year, month0 + 1, 0).getDate();
 
-      // weekdays seleccionados (ISO 1..7)
       const selectedWeekdays = new Set(
-        rows
-          .map((r) => normalizeWeekdayValue(r.dia))
-          .filter((x) => x != null)
+        rows.map((r) => normalizeWeekdayValue(r.dia)).filter((x) => x != null)
       );
 
       const fechas = [];
       for (let d = startDay; d <= daysInMonth; d++) {
-        const jsDay = new Date(year, month0, d).getDay(); // 0=dom ... 6=sab
-        const isoDay = jsDay === 0 ? 7 : jsDay; // 1=lun ... 7=dom
+        const jsDay = new Date(year, month0, d).getDay();
+        const isoDay = jsDay === 0 ? 7 : jsDay;
         if (!selectedWeekdays.has(isoDay)) continue;
 
         const mm = String(month0 + 1).padStart(2, "0");
@@ -227,135 +507,134 @@ export const cotizacionPage = {
       return fechas;
     }
 
-    // Muestra alerta si el turno incluye feriados dentro del mes desde fechaInicio
-    let lastFeriadoAlertKey = ""; // evita spamear alert por cada change
-
-    const weekdayMap = {
-      lunes: 1,
-      martes: 2,
-      miercoles: 3,
-      miércoles: 3,
-      jueves: 4,
-      viernes: 5,
-      sabado: 6,
-      sábado: 6,
-      domingo: 7,
-    };
-
-    function normalizeWeekdayValue(val) {
-      if (!val) return null;
-      const key = String(val).toLowerCase().trim();
-      if (weekdayMap[key]) return weekdayMap[key];
-
-      const num = Number(val);
-      if (num >= 1 && num <= 7) return num;
-
-      return null;
-    }
-
-    function timeToMinutes(hhmm) {
-      if (!hhmm || typeof hhmm !== "string") return null;
-      const [h, m] = hhmm.split(":").map(Number);
-      if (!Number.isFinite(h) || !Number.isFinite(m)) return null;
-      return h * 60 + m;
-    }
-
-    function diffHours(inicio, termino) {
-      const a = timeToMinutes(inicio);
-      const b = timeToMinutes(termino);
-      if (a == null || b == null) return null;
-      if (b <= a) return null;
-      return (b - a) / 60;
-    }
-
-    async function checkFeriadosEnTurno() {
-      const fecha = getField("fechaInicio");
+    async function checkFeriados() {
       const tipo = getField("tipoServicio") ?? "";
-      const rows = getDiasHorarios();
 
-      // Solo aplica a periódico + con fecha + con filas
-      if (tipo !== "periodico" || !fecha || !rows?.length) {
-        lastFeriadoAlertKey = "";
-        updateField("feriadosCount", 0);
-        const horas = getField("horasMensuales") ?? 0;
-        updateField("total", formatCLP(calcularPrecioBase(horas)));
-        return;
-      }
+      if (tipo === "periodico") {
+        const fecha = getField("fechaInicio");
+        const rows = getDiasHorarios();
 
-      // Si no hay días/horarios completos aún, no molestamos
-      const tieneAlgoValido = rows.some((r) => normalizeWeekdayValue(r.dia) && diffHours(r.inicio, r.termino) != null);
-      if (!tieneAlgoValido) return;
-
-      const base = new Date(fecha + "T00:00:00");
-      const year = base.getFullYear();
-      const month0 = base.getMonth();
-
-      const key = `${year}-${month0}-${fecha}-${JSON.stringify(rows.map(r => r.dia))}`;
-      if (key === lastFeriadoAlertKey) return; // evita repetir el mismo popup
-
-      try {
-        const { set, nameByDate } = await fetchFeriadosCL(year);
-
-        const fechasTurno = getFechasTurnoEnMesDesdeInicio(base, rows);
-        const feriadosEnTurno = fechasTurno.filter((d) => set.has(d));
-        const rowsValidas = rows.filter(r => normalizeWeekdayValue(r.dia) && diffHours(r.inicio, r.termino) != null);
-
-        // Si no hay turnos válidos, no recargo
-        if (!rowsValidas.length) {
+        const tieneAlgoValido = rows.some((r) => r.dia && diffHours(r.inicio, r.termino) != null);
+        if (!fecha || !rows?.length || !tieneAlgoValido) {
+          lastFeriadoAlertKey = "";
           updateField("feriadosCount", 0);
-          const horas = getField("horasMensuales") ?? 0;
-          updateField("total", formatCLP(calcularPrecioBase(horas)));
           return;
         }
 
-        // Como fechasTurno ya se arma por weekdays seleccionados, basta con contar feriadosEnTurno
-        const feriadosTrabajados = feriadosEnTurno.length;
+        const base = new Date(fecha + "T00:00:00");
+        const year = base.getFullYear();
+        const month0 = base.getMonth();
 
-        updateField("feriadosCount", feriadosTrabajados);
+        const fechasTurno = getFechasTurnoEnMesDesdeInicio(base, rows);
 
-        const horas = getField("horasMensuales") ?? 0;
-        const precioBase = calcularPrecioBase(horas);
+        const key = `P|${year}-${month0}|${fecha}|${JSON.stringify(rows.map((r) => [r.dia, r.inicio, r.termino]))}`;
+        if (key === lastFeriadoAlertKey) return;
 
-        // ✅ Recargo fijo por feriado trabajado
-        const RECARGO_POR_FERIADO = 15000;
-        const totalConRecargo = precioBase + feriadosTrabajados * RECARGO_POR_FERIADO;
+        try {
+          const { set, nameByDate } = await fetchFeriadosCL(year);
+          const feriadosEnTurno = fechasTurno.filter((d) => set.has(d));
 
-        updateField("total", formatCLP(totalConRecargo));
+          updateField("feriadosCount", feriadosEnTurno.length);
 
-        if (feriadosTrabajados > 0) {
-          lastFeriadoAlertKey = key;
-          openFeriadosModal(
-            feriadosEnTurno.map((d) => ({
-              date: d,
-              name: nameByDate.get(d) || "Feriado",
-            }))
-          );
+          if (feriadosEnTurno.length > 0) {
+            lastFeriadoAlertKey = key;
+            openFeriadosModal(
+              feriadosEnTurno.map((d) => ({ date: d, name: nameByDate.get(d) || "Feriado" }))
+            );
+          }
+        } catch (err) {
+          console.warn("No pude validar feriados:", err);
         }
-      } catch (err) {
-        // Si la API falla, no rompas el formulario
-        console.warn("No pude validar feriados:", err);
+
+        return;
       }
+
+      if (tipo === "ocasional") {
+        const turnos = getTurnosOcasionales();
+        const fechas = turnos.map((t) => t.date).filter(Boolean);
+
+        if (!fechas.length) {
+          lastFeriadoAlertKey = "";
+          updateField("feriadosCount", 0);
+          return;
+        }
+
+        const key = `O|${JSON.stringify(turnos.map(t => [t.date, t.inicio, t.termino]))}`;
+        if (key === lastFeriadoAlertKey) return;
+
+        try {
+          const years = [...new Set(fechas.map((d) => Number(String(d).slice(0, 4))).filter(Boolean))];
+
+          let feriadosCount = 0;
+          const feriadosItems = [];
+
+          for (const y of years) {
+            const { set, nameByDate } = await fetchFeriadosCL(y);
+            fechas
+              .filter((d) => d.startsWith(String(y)))
+              .forEach((d) => {
+                if (set.has(d)) {
+                  feriadosCount++;
+                  feriadosItems.push({ date: d, name: nameByDate.get(d) || "Feriado" });
+                }
+              });
+          }
+
+          updateField("feriadosCount", feriadosCount);
+
+          if (feriadosCount > 0) {
+            lastFeriadoAlertKey = key;
+            openFeriadosModal(feriadosItems);
+          }
+        } catch (err) {
+          console.warn("No pude validar feriados:", err);
+        }
+
+        return;
+      }
+
+      lastFeriadoAlertKey = "";
+      updateField("feriadosCount", 0);
     }
 
+    /* =========================
+       Cálculo total horas + precio
+    ========================= */
+
     function calculateHorasMensuales() {
-      const fecha = getField("fechaInicio");
-      const rows = getDiasHorarios();
+      const tipo = getField("tipoServicio") ?? "";
+      let totalHoras = 0;
 
-      const total = calcularHorasMensuales(fecha, rows);
+      if (tipo === "periodico") {
+        const fecha = getField("fechaInicio");
+        const rows = getDiasHorarios();
+        totalHoras = calcularHorasMensuales(fecha, rows);
+      }
 
-      updateField("horasMensuales", total);
+      if (tipo === "ocasional") {
+        const turnos = getTurnosOcasionales();
+        let sum = 0;
+        for (const t of turnos) {
+          const h = diffHours(t.inicio, t.termino);
+          if (h != null) sum += h;
+        }
+        totalHoras = Math.round(sum * 100) / 100;
+      }
+
+      updateField("horasMensuales", totalHoras);
       renderHorasMensualesUI();
 
-      // ✅ Precio base (sin feriados)
-      const precioBase = calcularPrecioBase(total);
+      const precioBase = calcularPrecioBase(totalHoras);
       updateField("precioBase", precioBase);
       updateField("total", formatCLP(precioBase));
 
-      void checkFeriadosEnTurno();
-      return total;
+      void checkFeriados();
+      return totalHoras;
     }
 
-    // ------------------- FECHA ADAPTATIVA -------------------
+    /* =========================
+       Toggles
+    ========================= */
 
     function toggleFechaAdaptativa() {
       const valor = getField("turnoAdaptativo");
@@ -365,59 +644,64 @@ export const cotizacionPage = {
 
       if (!show) {
         updateField("fechaAdaptativa", "");
-        if (fechaAdaptativa) fechaAdaptativa.value = "";
+        if (fechaAdaptativaInput) fechaAdaptativaInput.value = "";
       }
     }
 
-    if (fechaAdaptativa) fechaAdaptativa.value = getField("fechaAdaptativa") ?? "";
-    toggleFechaAdaptativa();
-
-    adaptRadios.forEach((r) => {
-      r.addEventListener("change", () => {
-        updateField("turnoAdaptativo", r.value);
-        toggleFechaAdaptativa();
-      });
-    });
-
-    if (fechaAdaptativa) {
-      fechaAdaptativa.addEventListener("change", (e) => {
-        updateField("fechaAdaptativa", e.target.value);
-      });
-    }
-
-    // ------------------- DÍAS (PERIÓDICO) -------------------
-
-    function toggleDias() {
+    function toggleTipoServicioUI() {
       const tipo = getField("tipoServicio") ?? "";
-      const isPeriodico = tipo === "periodico";
 
-      if (diasWrap) diasWrap.style.display = isPeriodico ? "block" : "none";
+      // reset warning siempre que cambie tipo
+      if (nocturnoWarning) nocturnoWarning.hidden = true;
+      updateField("turnoNocturno", "");
 
-      if (!isPeriodico) {
-        updateField("diasSemana", "");
-        if (diasSemana) diasSemana.value = "";
-        lastFeriadoAlertKey = "";
+      if (tipo === "periodico") {
+        if (diasWrap) diasWrap.style.display = "block";
+        if (ocasionalWrap) ocasionalWrap.style.display = "none";
 
-        setDiasHorarios([]);
-        if (diasHorariosWrap) diasHorariosWrap.innerHTML = "";
-        if (diasHorariosWrap) diasHorariosWrap.style.display = "none";
+        // limpiar ocasional
+        setTurnosOcasionales([]);
+        const fp = fechasOcasionalesInput?._flatpickr;
+        if (fp) fp.clear();
+        if (ocasionalTurnosList) ocasionalTurnosList.innerHTML = "";
 
-        updateField("horasMensuales", 0);
-        renderHorasMensualesUI();
-      } else {
         renderDiasRows(diasSemana?.value);
         calculateHorasMensuales();
+        return;
       }
+
+      if (tipo === "ocasional") {
+        if (diasWrap) diasWrap.style.display = "none";
+        if (diasHorariosWrap) {
+          diasHorariosWrap.innerHTML = "";
+          diasHorariosWrap.style.display = "none";
+        }
+        setDiasHorarios([]);
+        updateField("diasSemana", "");
+        if (diasSemana) diasSemana.value = "";
+
+        if (ocasionalWrap) ocasionalWrap.style.display = "block";
+
+        renderTurnosOcasionales();
+        calculateHorasMensuales();
+        updateNocturnoWarning();
+        return;
+      }
+
+      // ninguno seleccionado
+      if (diasWrap) diasWrap.style.display = "none";
+      if (ocasionalWrap) ocasionalWrap.style.display = "none";
     }
 
     function refreshSelectedUI() {
       container.querySelectorAll(".radio-item").forEach((label) => label.classList.remove("selected"));
-
       const checked = container.querySelector('input[name="transporte"]:checked');
       if (checked) checked.closest(".radio-item")?.classList.add("selected");
     }
 
-    // -------------------- CARGAR ESTADO --------------------
+    /* =========================
+       Cargar estado inicial
+    ========================= */
 
     if (comuna) comuna.value = getField("comuna") ?? "";
     if (direccion) direccion.value = getField("direccion") ?? "";
@@ -433,19 +717,31 @@ export const cotizacionPage = {
 
     if (diasSemana) diasSemana.value = getField("diasSemana") ?? "";
 
-    if (fechaInicio) fechaInicio.value = getField("fechaInicio") ?? "";
-
     const turnoAdaptativo = getField("turnoAdaptativo") ?? "";
     const checkedAdapt = adaptRadios.find((r) => r.value === turnoAdaptativo);
     if (checkedAdapt) checkedAdapt.checked = true;
 
-    // ✅ Ahora que todo está seteado, aplicamos toggles y calculamos
-    toggleDias();
+    // Flatpickr (1 fecha)
+    wireFlatpickr(fechaInicioInput, "fechaInicio", {
+      onChange: () => calculateHorasMensuales(),
+    });
+
+    wireFlatpickr(fechaAdaptativaInput, "fechaAdaptativa");
+
+    // Flatpickr (ocasional multi)
+    wireFlatpickrMultiple(fechasOcasionalesInput);
+    renderTurnosOcasionales();
+
+    // aplicar toggles y cálculos
+    toggleTipoServicioUI();
     toggleFechaAdaptativa();
     calculateHorasMensuales();
     renderHorasMensualesUI();
+    updateNocturnoWarning();
 
-    // -------------------- LISTENERS --------------------
+    /* =========================
+       Listeners
+    ========================= */
 
     if (comuna) comuna.addEventListener("change", (e) => updateField("comuna", e.target.value));
     if (direccion) direccion.addEventListener("input", (e) => updateField("direccion", e.target.value.trim()));
@@ -460,7 +756,9 @@ export const cotizacionPage = {
     tipoRadios.forEach((r) => {
       r.addEventListener("change", () => {
         updateField("tipoServicio", r.value);
-        toggleDias();
+        toggleTipoServicioUI();
+        updateNocturnoWarning();
+        calculateHorasMensuales();
       });
     });
 
@@ -472,16 +770,10 @@ export const cotizacionPage = {
       });
     }
 
-    if (fechaInicio) {
-      fechaInicio.addEventListener("change", (e) => {
-        updateField("fechaInicio", e.target.value);
-        calculateHorasMensuales();
-      });
-    }
-
     adaptRadios.forEach((r) => {
       r.addEventListener("change", () => {
         updateField("turnoAdaptativo", r.value);
+        toggleFechaAdaptativa();
       });
     });
   },
@@ -490,19 +782,56 @@ export const cotizacionPage = {
     const tipo = getField("tipoServicio") ?? "";
     const turno = getField("turnoAdaptativo");
 
-    return (
+    const baseOk =
       required(getField("comuna")) &&
       required(getField("direccion")) &&
       required(getField("transporte")) &&
       required(tipo) &&
-      (tipo !== "periodico" || required(getField("diasSemana"))) &&
       required(getField("fechaInicio")) &&
       required(getField("turnoAdaptativo")) &&
       required(turno) &&
-      (turno !== "si" || required(getField("fechaAdaptativa")))
-    );
+      (turno !== "si" || required(getField("fechaAdaptativa")));
+
+    if (!baseOk) return false;
+
+    if (tipo === "periodico") {
+      return required(getField("diasSemana"));
+    }
+
+    if (tipo === "ocasional") {
+      const turnos = (() => {
+        const raw = getField("turnosOcasionales");
+        if (!raw) return [];
+        if (Array.isArray(raw)) return raw;
+        try { return JSON.parse(raw); } catch { return []; }
+      })();
+
+      if (!turnos.length) return false;
+
+      // todos deben tener mínimo 4 horas válidas
+      const timeToMinutes = (hhmm) => {
+        if (!hhmm || typeof hhmm !== "string") return null;
+        const [h, m] = hhmm.split(":").map(Number);
+        if (!Number.isFinite(h) || !Number.isFinite(m)) return null;
+        return h * 60 + m;
+      };
+      const diffHours = (inicio, termino) => {
+        const a = timeToMinutes(inicio);
+        const b = timeToMinutes(termino);
+        if (a == null || b == null) return null;
+        let diffMin = b - a;
+        if (diffMin <= 0) diffMin += 24 * 60;
+        const hours = diffMin / 60;
+        if (hours < 4) return null;
+        return hours;
+      };
+
+      return turnos.every((t) => diffHours(t.inicio, t.termino) != null);
+    }
+
+    return true;
   },
 
   errorMessage:
-    "Completa comuna, dirección, transporte, tipo de servicio, fecha y turno adaptativo (y días si es periódico).",
+    "Completa comuna, dirección, transporte, tipo de servicio, fecha de inicio, turno adaptativo (y fechas/horario si es ocasional, o días si es periódico).",
 };
