@@ -108,3 +108,12 @@ export function calcularHorasMensuales(fechaInicio, diasHorarios) {
 
   return Math.round(total * 100) / 100;
 }
+
+export function calcularHorasMensualesOcasional(turnos) {
+  let sum = 0;
+  for (const t of turnos || []) {
+    const h = diffHours(t?.inicio, t?.termino);
+    if (h != null) sum += h;
+  }
+  return Math.round(sum * 100) / 100;
+}

@@ -2,8 +2,8 @@ import { pages } from "./pages.js";
 import { getState } from "./store.js";
 import { canGoBack, canGoNext, getCurrentPage, getPageCount, getPageIndex, go } from "./router.js";
 import * as V from "./validators.js";
-import { calcularHorasMensuales } from "./utils/calculoHoras.js";
-import { calcularPrecioBase, formatCLP } from "./utils/calcularPrecio.js";
+import { calcularHorasMensuales, calcularHorasMensualesOcasional } from "./utils/calculoHoras.js";
+import { calcularPrecioBase, calcularTotalServicio, formatCLP } from "./utils/calcularPrecio.js";
 import flatpickr from "https://esm.sh/flatpickr@4.6.13";
 import { Spanish } from "https://esm.sh/flatpickr@4.6.13/dist/l10n/es.js";
 
@@ -45,12 +45,21 @@ async function enviarAGoogleDrive(data) {
 // ✅ NUEVO: prepara payload con horas + total recalculados
 function prepararDatosParaEnvio(state) {
   const data = { ...state.data };
+  const tipo = String(data.tipoServicio ?? "").trim().toLowerCase();
+  let turnosOcasionales = data.turnosOcasionales;
 
-  const diasHorarios = Array.isArray(data.diasHorarios) ? data.diasHorarios : [];
-  const horasMensuales = calcularHorasMensuales(data.fechaInicio, diasHorarios);
-
-  const totalRaw = calcularPrecioBase(horasMensuales);
-  const total = formatCLP(totalRaw);
+  if(tipo === 'ocasional'){
+    const horasMensuales = calcularHorasMensualesOcasional(turnosOcasionales);
+    const totalRaw = calcularTotalServicio(horasMensuales, data.kidsCount, data.feriadosCount);
+    const total = formatCLP(totalRaw);
+    console.log(total, " precio final");
+  }else{
+    const diasHorarios = Array.isArray(data.diasHorarios) ? data.diasHorarios : [];
+    const horasMensuales = calcularHorasMensuales(data.fechaInicio, diasHorarios);
+    const totalRaw = calcularTotalServicio(horasMensuales, data.kidsCount, data.feriadosCount);
+    const total = formatCLP(totalRaw);
+    console.log(total, " precio final");
+  }
 
   return {
     ...data,
