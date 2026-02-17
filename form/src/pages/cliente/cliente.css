@@ -126,6 +126,12 @@
   align-items: center;
   gap: 8px;
 }
+/* Header días (Lun, Mar, Mié...) */
+
+
+.flatpickr-weekday{
+  color: #ffffff !important;
+}
 
 /* Botón del año: mismo tamaño/alto que el texto original */
 .fp-yearbtn {

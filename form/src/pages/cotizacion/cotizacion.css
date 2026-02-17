@@ -631,7 +631,7 @@
 }
 
 /* =========================
-   MOBILE: cotización (pegar al final)
+   MOBILE: cotización
 ========================= */
 @media (max-width: 640px){
   .page.cotizacion{
@@ -641,14 +641,14 @@
   /* tipografía global de la página */
   .page.cotizacion label,
   .page.cotizacion legend{
-    font-size: 16px;   /* antes 22 */
+    font-size: 16px;   
     font-weight: 600;
   }
 
   .page.cotizacion input,
   .page.cotizacion select,
   .page.cotizacion textarea{
-    font-size: 16px;   /* antes 20 */
+    font-size: 16px;   
   }
 
   .page.cotizacion select option{
@@ -682,6 +682,11 @@
     height: 18px;
   }
 
+  .page.cotizacion .comunaWrap{
+    box-sizing: border-box;
+  }
+
+
   /* panel */
   .page.cotizacion .panel{
     padding: 12px 12px;
@@ -696,7 +701,6 @@
   /* selects "wrap" */
   .page.cotizacion #diasWrap.field,
   .page.cotizacion #comunaWrap.field{
-    padding: 12px 12px;
     border-radius: 12px;
   }
 
@@ -711,11 +715,11 @@
   /* flechas: ajusta posición para que no queden raras */
   .page.cotizacion #diasWrap.field::after{
     right: 14px;
-    transform: translateX(-6px) translateY(7px) rotate(45deg);
+    transform: translateX(-10px) translateY(7px) rotate(45deg);
   }
   .page.cotizacion #comunaWrap.field::after{
     right: 14px;
-    transform: translateX(2px) translateY(10px) rotate(45deg);
+    transform: translateX(1px) translateY(18px) rotate(45deg);
   }
 
   /* la fila dia-row ya la haces 1 columna en <=600, pero mejoramos padding */
