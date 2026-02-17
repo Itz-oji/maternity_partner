@@ -46,28 +46,41 @@ async function enviarAGoogleDrive(data) {
 function prepararDatosParaEnvio(state) {
   const data = { ...state.data };
   const tipo = String(data.tipoServicio ?? "").trim().toLowerCase();
-  let turnosOcasionales = data.turnosOcasionales;
 
-  if(tipo === 'ocasional'){
-    const horasMensuales = calcularHorasMensualesOcasional(turnosOcasionales);
-    const totalRaw = calcularTotalServicio(horasMensuales, data.kidsCount, data.feriadosCount);
-    const total = formatCLP(totalRaw);
-    console.log(total, " precio final");
-  }else{
+  let horasMensuales = 0;
+  let totalRaw = 0;
+  let total = "";
+
+  if (tipo === 'ocasional') {
+    let turnosOcasionales = data.turnosOcasionales;
+
+    if (!Array.isArray(turnosOcasionales)) {
+      try {
+        turnosOcasionales = JSON.parse(turnosOcasionales || "[]");
+      } catch {
+        turnosOcasionales = [];
+      }
+    }
+
+    horasMensuales = calcularHorasMensualesOcasional(turnosOcasionales);
+  } else {
     const diasHorarios = Array.isArray(data.diasHorarios) ? data.diasHorarios : [];
-    const horasMensuales = calcularHorasMensuales(data.fechaInicio, diasHorarios);
-    const totalRaw = calcularTotalServicio(horasMensuales, data.kidsCount, data.feriadosCount);
-    const total = formatCLP(totalRaw);
-    console.log(total, " precio final");
+    horasMensuales = calcularHorasMensuales(data.fechaInicio, diasHorarios);
   }
+
+  totalRaw = calcularTotalServicio(horasMensuales, data.kidsCount, data.feriadosCount);
+  total = formatCLP(totalRaw);
+
+  console.log(total, "precio final");
 
   return {
     ...data,
-    horasMensuales, // number
-    totalRaw,       // number
-    total,          // "$123.456"
+    horasMensuales,
+    totalRaw,
+    total,
   };
 }
+
 
 function showFormView() {
   pageHost.hidden = false;

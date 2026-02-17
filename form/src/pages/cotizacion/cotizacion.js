@@ -370,8 +370,18 @@ export const cotizacionPage = {
     ========================= */
 
     function isoToPretty(iso) {
-      const [Y, M, D] = String(iso).split("-");
-      return `${D}/${M}/${Y}`;
+      if (!iso) return "";
+
+      const date = new Date(iso + "T00:00:00");
+
+      const formatted = new Intl.DateTimeFormat("es-CL", {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+      }).format(date);
+
+      // Capitalizar la primera letra (Intl devuelve "lunes")
+      return formatted.charAt(0).toUpperCase() + formatted.slice(1);
     }
 
     function renderTurnosOcasionales() {
@@ -488,8 +498,11 @@ export const cotizacionPage = {
 
           const next = picked.map((date) => {
             const prev = map.get(date);
+            const forma = isoToPretty(date);
+            const weekday = forma.split(',')[0];
             return {
               date,
+              weekday,
               inicio: prev?.inicio ?? "",
               termino: prev?.termino ?? "",
             };
