@@ -3,7 +3,7 @@ import { getState } from "./store.js";
 import { canGoBack, canGoNext, getCurrentPage, getPageCount, getPageIndex, go } from "./router.js";
 import * as V from "./validators.js";
 import { calcularHorasMensuales, calcularHorasMensualesOcasional } from "./utils/calculoHoras.js";
-import { calcularPrecioBase, calcularTotalServicio, formatCLP, obtenerTarifaHora } from "./utils/calcularPrecio.js";
+import { calcularResumenServicio, calcularTotalServicio, formatCLP, obtenerTarifaHora } from "./utils/calcularPrecio.js";
 import flatpickr from "https://esm.sh/flatpickr@4.6.13";
 import { Spanish } from "https://esm.sh/flatpickr@4.6.13/dist/l10n/es.js";
 
@@ -191,7 +191,7 @@ function formatPct(p) {
   return `${Math.round(n * 100)}%`;
 }
 
-export function buildDetalleCobro({ horasMensuales, kidsCount, feriadosCount }, resumen) {
+function buildDetalleCobro({ horasMensuales, kidsCount, feriadosCount }, resumen) {
   const tarifa = obtenerTarifaHora(kidsCount);
 
   return [
