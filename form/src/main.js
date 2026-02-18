@@ -3,7 +3,7 @@ import { getState } from "./store.js";
 import { canGoBack, canGoNext, getCurrentPage, getPageCount, getPageIndex, go } from "./router.js";
 import * as V from "./validators.js";
 import { calcularHorasMensuales, calcularHorasMensualesOcasional } from "./utils/calculoHoras.js";
-import { calcularPrecioBase, calcularTotalServicio, formatCLP } from "./utils/calcularPrecio.js";
+import { calcularPrecioBase, calcularTotalServicio, formatCLP, obtenerTarifaHora } from "./utils/calcularPrecio.js";
 import flatpickr from "https://esm.sh/flatpickr@4.6.13";
 import { Spanish } from "https://esm.sh/flatpickr@4.6.13/dist/l10n/es.js";
 
@@ -42,42 +42,39 @@ async function enviarAGoogleDrive(data) {
   return json;
 }
 
-// ✅ NUEVO: prepara payload con horas + total recalculados
 function prepararDatosParaEnvio(state) {
   const data = { ...state.data };
   const tipo = String(data.tipoServicio ?? "").trim().toLowerCase();
 
   let horasMensuales = 0;
-  let totalRaw = 0;
-  let total = "";
 
-  if (tipo === 'ocasional') {
-    let turnosOcasionales = data.turnosOcasionales;
-
-    if (!Array.isArray(turnosOcasionales)) {
-      try {
-        turnosOcasionales = JSON.parse(turnosOcasionales || "[]");
-      } catch {
-        turnosOcasionales = [];
-      }
+  if (tipo === "ocasional") {
+    let turnos = data.turnosOcasionales;
+    if (!Array.isArray(turnos)) {
+      try { turnos = JSON.parse(turnos || "[]"); } catch { turnos = []; }
     }
-
-    horasMensuales = calcularHorasMensualesOcasional(turnosOcasionales);
+    horasMensuales = calcularHorasMensualesOcasional(turnos);
   } else {
     const diasHorarios = Array.isArray(data.diasHorarios) ? data.diasHorarios : [];
     horasMensuales = calcularHorasMensuales(data.fechaInicio, diasHorarios);
   }
 
-  totalRaw = calcularTotalServicio(horasMensuales, data.kidsCount, data.feriadosCount);
-  total = formatCLP(totalRaw);
+  const resumen = calcularResumenServicio(horasMensuales, data.kidsCount, data.feriadosCount);
+  const totalRaw = resumen.total;
+  const total = formatCLP(totalRaw);
 
-  console.log(total, "precio final");
+  const detalleCobro = buildDetalleCobro(
+    { horasMensuales, kidsCount: data.kidsCount, feriadosCount: data.feriadosCount },
+    resumen
+  );
 
   return {
     ...data,
     horasMensuales,
     totalRaw,
     total,
+    detalleCobro,      // 👈 envíalo al Apps Script
+    resumenServicio: resumen, // 👈 opcional (por si quieres tabla)
   };
 }
 
@@ -187,6 +184,27 @@ function handleBackClick() {
   if (alreadySubmitted) return;
   go(-1);
   render();
+}
+
+function formatPct(p) {
+  const n = Number(p) || 0;
+  return `${Math.round(n * 100)}%`;
+}
+
+export function buildDetalleCobro({ horasMensuales, kidsCount, feriadosCount }, resumen) {
+  const tarifa = obtenerTarifaHora(kidsCount);
+
+  return [
+    "Detalle de cobro",
+    `• Horas totales: ${Number(horasMensuales) || 0} h`,
+    `• Valor hora (${kidsCount} niño${Number(kidsCount) > 1 ? "s" : ""}): ${formatCLP(tarifa)}`,
+    `• Base: ${formatCLP(resumen.base)} (${Number(horasMensuales) || 0} h × ${formatCLP(tarifa)})`,
+    `• Descuento por horas (${formatPct(resumen.descuentoPct)}): -${formatCLP(resumen.descuentoMonto)}`,
+    `• Subtotal: ${formatCLP(resumen.subtotal)}`,
+    `• Recargo feriados (${Number(feriadosCount) || 0} × ${formatCLP(15000)}): +${formatCLP(resumen.feriados)}`,
+    "—————————————",
+    `TOTAL: ${formatCLP(resumen.total)}`,
+  ].join("\n");
 }
 
 btnBack.addEventListener("click", handleBackClick);
