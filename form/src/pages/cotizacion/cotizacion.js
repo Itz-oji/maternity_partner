@@ -315,6 +315,37 @@ export const cotizacionPage = {
       updateField("turnoNocturno", hasNocturno ? "si" : "");
     }
 
+    function turnosCompletosParaFeriados() {
+      const tipo = getField("tipoServicio") ?? "";
+
+      if (tipo === "periodico") {
+        const fecha = getField("fechaInicio");
+        const rows = getDiasHorarios();
+        if (!fecha) return false;
+        if (!rows.length) return false;
+
+        // todas las filas deben tener dia + inicio + termino + >=4h
+        return rows.every((r) =>
+          !!String(r?.dia ?? "").trim() &&
+          diffHours(r?.inicio, r?.termino) != null
+        );
+      }
+
+      if (tipo === "ocasional") {
+        const turnos = getTurnosOcasionales();
+        if (!turnos.length) return false;
+
+        // todos los turnos deben tener date + inicio + termino + >=4h
+        return turnos.every((t) =>
+          !!String(t?.date ?? "").trim() &&
+          diffHours(t?.inicio, t?.termino) != null
+        );
+      }
+
+      return false;
+    }
+
+
     /* =========================
        Flatpickr base (1 fecha)
     ========================= */
@@ -683,7 +714,7 @@ export const cotizacionPage = {
 
         const fechasTurno = getFechasTurnoEnMesDesdeInicio(base, rows);
 
-        const key = `P|${year}-${month0}|${fecha}|${JSON.stringify(rows.map((r) => [r.dia, r.inicio, r.termino]))}`;
+        const key = `P|${year}-${month0}|${fecha}|${JSON.stringify(rows.map((r) => r.dia).sort())}`;
         if (key === lastFeriadoAlertKey) return;
 
         try {
@@ -715,7 +746,7 @@ export const cotizacionPage = {
           return;
         }
 
-        const key = `O|${JSON.stringify(turnos.map(t => [t.date, t.inicio, t.termino]))}`;
+        const key = `O|${JSON.stringify(fechas.slice().sort())}`;
         if (key === lastFeriadoAlertKey) return;
 
         try {
@@ -784,7 +815,13 @@ export const cotizacionPage = {
       updateField("precioBase", precioBase);
       updateField("total", formatCLP(precioBase));
 
-      void checkFeriados();
+      if (turnosCompletosParaFeriados()) {
+        void checkFeriados();
+      } else {
+        // opcional: mientras no esté completo, no molestes y deja contador en 0
+        lastFeriadoAlertKey = "";
+        updateField("feriadosCount", 0);
+      }
       return totalHoras;
     }
 
