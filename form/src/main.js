@@ -3,7 +3,7 @@ import { getState } from "./store.js";
 import { canGoBack, canGoNext, getCurrentPage, getPageCount, getPageIndex, go } from "./router.js";
 import * as V from "./validators.js";
 import { calcularHorasMensuales, calcularHorasMensualesOcasional } from "./utils/calculoHoras.js";
-import { calcularResumenServicio, calcularTotalServicio, formatCLP, obtenerTarifaHora } from "./utils/calcularPrecio.js";
+import { calcularResumenServicio,calcularTurnoAdaptativo, calcularTotalServicio, formatCLP, obtenerTarifaHora } from "./utils/calcularPrecio.js";
 import flatpickr from "https://esm.sh/flatpickr@4.6.13";
 import { Spanish } from "https://esm.sh/flatpickr@4.6.13/dist/l10n/es.js";
 
@@ -63,6 +63,10 @@ function prepararDatosParaEnvio(state) {
   const resumen = calcularResumenServicio(horasMensuales, data.kidsCount, data.feriadosCount, data.turnoAdaptativo, adaptativoMismoDia);
   const totalRaw = resumen.total;
   const total = formatCLP(totalRaw);
+  let precioAdaptativo = 0;
+   if(!adaptativoMismoDia){
+    precioAdaptativo = calcularTurnoAdaptativo(data.turnoAdaptativo, adaptativoMismoDia);
+  }
 
   const detalleCobro = buildDetalleCobro(
     { horasMensuales, kidsCount: data.kidsCount, feriadosCount: data.feriadosCount },
@@ -74,6 +78,7 @@ function prepararDatosParaEnvio(state) {
     horasMensuales,
     totalRaw,
     total,
+    precioAdaptativo,
     detalleCobro,      // 👈 envíalo al Apps Script
     resumenServicio: resumen, // 👈 opcional (por si quieres tabla)
   };
