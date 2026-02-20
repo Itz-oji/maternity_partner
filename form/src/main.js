@@ -65,7 +65,7 @@ function prepararDatosParaEnvio(state) {
   const total = formatCLP(totalRaw);
   let precioAdaptativo = 0;
    if(!adaptativoMismoDia){
-    precioAdaptativo = calcularTurnoAdaptativo(data.turnoAdaptativo, adaptativoMismoDia);
+    precioAdaptativo = calcularTurnoAdaptativo(data.kidsCount);
   }
 
   const detalleCobro = buildDetalleCobro(
