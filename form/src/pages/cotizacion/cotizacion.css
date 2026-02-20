@@ -630,6 +630,10 @@
   box-shadow: 0 0 0 3px rgba(217,48,37,0.15) !important;
 }
 
+.warn-highlight {
+  font-weight: 700;        /* semibold, más elegante que bold */
+  color: #5f4600;          /* rojo suave (alerta profesional) */
+}
 /* =========================
    MOBILE: cotización
 ========================= */

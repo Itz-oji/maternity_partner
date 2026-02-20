@@ -59,7 +59,8 @@ function prepararDatosParaEnvio(state) {
     horasMensuales = calcularHorasMensuales(data.fechaInicio, diasHorarios);
   }
 
-  const resumen = calcularResumenServicio(horasMensuales, data.kidsCount, data.feriadosCount);
+  const adaptativoMismoDia = adaptativoCaeEnTurnoNormal(data);
+  const resumen = calcularResumenServicio(horasMensuales, data.kidsCount, data.feriadosCount, data.turnoAdaptativo, adaptativoMismoDia);
   const totalRaw = resumen.total;
   const total = formatCLP(totalRaw);
 
@@ -205,6 +206,75 @@ function buildDetalleCobro({ horasMensuales, kidsCount, feriadosCount }, resumen
     "—————————————",
     `TOTAL: ${formatCLP(resumen.total)}`,
   ].join("\n");
+}
+
+function adaptativoCaeEnTurnoNormal(data) {
+  const turnoAdaptativo = String(data.turnoAdaptativo ?? "").trim().toLowerCase();
+  if (turnoAdaptativo !== "si") return false;
+
+  const fechaAdapt = String(data.fechaAdaptativa ?? "").trim(); // "YYYY-MM-DD"
+  if (!fechaAdapt) return false;
+
+  const tipo = String(data.tipoServicio ?? "").trim().toLowerCase();
+
+  // --- Ocasional: comparar contra turnosOcasionales.date ---
+  if (tipo === "ocasional") {
+    let turnos = data.turnosOcasionales;
+    if (!Array.isArray(turnos)) {
+      try { turnos = JSON.parse(turnos || "[]"); } catch { turnos = []; }
+    }
+    return turnos.some(t => String(t?.date ?? "").trim() === fechaAdapt);
+  }
+
+  // --- Periódico: generar ocurrencias del mes desde fechaInicio + diasHorarios ---
+  if (tipo === "periodico") {
+    const fechaInicio = String(data.fechaInicio ?? "").trim();
+    if (!fechaInicio) return false;
+
+    const rows = Array.isArray(data.diasHorarios) ? data.diasHorarios : [];
+    if (!rows.length) return false;
+
+    // weekdayMap: 1=lun ... 7=dom
+    const weekdayMap = {
+      lunes: 1, martes: 2, miercoles: 3, miércoles: 3, jueves: 4, viernes: 5, sabado: 6, sábado: 6, domingo: 7,
+    };
+    const normalizeWeekdayValue = (val) => {
+      if (!val) return null;
+      const key = String(val).toLowerCase().trim();
+      if (weekdayMap[key]) return weekdayMap[key];
+      const num = Number(val);
+      if (num >= 1 && num <= 7) return num;
+      return null;
+    };
+
+    const base = new Date(fechaInicio + "T00:00:00");
+    const year = base.getFullYear();
+    const month0 = base.getMonth();
+    const startDay = base.getDate();
+    const daysInMonth = new Date(year, month0 + 1, 0).getDate();
+
+    const selectedWeekdays = new Set(
+      rows.map(r => normalizeWeekdayValue(r?.dia)).filter(x => x != null)
+    );
+
+    // solo ocurrencias desde fechaInicio hasta fin de mes (igual que feriados)
+    for (let d = startDay; d <= daysInMonth; d++) {
+      const jsDay = new Date(year, month0, d).getDay(); // 0 dom ... 6 sáb
+      const isoDay = jsDay === 0 ? 7 : jsDay;
+
+      if (!selectedWeekdays.has(isoDay)) continue;
+
+      const mm = String(month0 + 1).padStart(2, "0");
+      const dd = String(d).padStart(2, "0");
+      const iso = `${year}-${mm}-${dd}`;
+
+      if (iso === fechaAdapt) return true;
+    }
+
+    return false;
+  }
+
+  return false;
 }
 
 btnBack.addEventListener("click", handleBackClick);

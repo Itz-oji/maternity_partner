@@ -80,9 +80,20 @@ export function calcularTotalServicio(horasMensuales, cantidadNinos = 1, feriado
 export function calcularResumenServicio(
   horasMensuales,
   cantidadNinos = 1,
-  feriadosCount = 0
+  feriadosCount = 0,
+  turnoAdaptativo,
+  adaptativoMismoDia
 ) {
-  const base = calcularPrecioBase(horasMensuales, cantidadNinos);
+  let base = calcularPrecioBase(horasMensuales, cantidadNinos);
+  console.log(adaptativoMismoDia);
+  if(!adaptativoMismoDia){
+    if(turnoAdaptativo === 'si'){
+      const tarifaAdaptativo = obtenerTarifaHora(cantidadNinos);
+      console.log(base);
+      base = base + ((4 * tarifaAdaptativo) * 0.75);
+      console.log(base);
+    }
+  }
   const descuentoPct = obtenerDescuentoPorHoras(horasMensuales);
   const descuentoMonto = base * descuentoPct;
 

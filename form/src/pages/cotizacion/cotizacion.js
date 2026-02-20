@@ -36,8 +36,9 @@ export const cotizacionPage = {
     const diasHorariosWrap = container.querySelector("#diasHorariosWrap");
     const diaRowTemplate = container.querySelector("#diaRowTemplate");
 
-    // Warning nocturno
+    // Warning 
     const nocturnoWarning = container.querySelector("#nocturnoWarning");
+    const adaptativoWarning = container.querySelector("#adaptativoWarning");
 
     // UI horas
     const horasMensualesTxt = container.querySelector("#horasMensualesTxt");
@@ -263,6 +264,12 @@ export const cotizacionPage = {
     /* =========================
        Time helpers + reglas
     ========================= */
+
+    function todayLocal() {
+      const d = new Date();
+      d.setHours(0, 0, 0, 0);
+      return d;
+    }
 
     function timeToMinutes(hhmm) {
       if (!hhmm || typeof hhmm !== "string") return null;
@@ -506,6 +513,7 @@ export const cotizacionPage = {
         disableMobile: true,
         allowInput: false,
         defaultDate: savedDates.length ? savedDates : null,
+        minDate: todayLocal(),
         plugins: [
           yearGridPlugin({
             yearsPerPage: 12,
@@ -906,6 +914,25 @@ export const cotizacionPage = {
       if (checked) checked.closest(".radio-item")?.classList.add("selected");
     }
 
+    function toggleFechaAdaptativa() {
+      const valor = getField("turnoAdaptativo");
+      const show = valor === "si";
+
+      if (fechaAdaptativaWrap) fechaAdaptativaWrap.style.display = show ? "block" : "none";
+
+      // ✅ mostrar/ocultar warning adaptativo
+      if (adaptativoWarning) adaptativoWarning.hidden = !show;
+
+      if (!show) {
+        updateField("fechaAdaptativa", "");
+        if (fechaAdaptativaInput) fechaAdaptativaInput.value = "";
+
+        // (opcional pero recomendado) limpiar flatpickr de fecha adaptativa
+        const fp = fechaAdaptativaInput?._flatpickr;
+        if (fp) fp.clear();
+      }
+    }
+
     /* =========================
        Cargar estado inicial
     ========================= */
@@ -931,12 +958,16 @@ export const cotizacionPage = {
     // Flatpickr (1 fecha)
     wireFlatpickr(fechaInicioInput, "fechaInicio", () => {
       calculateHorasMensuales();
-      // validateAndPaint(false);
+    }, {
+      minDate: todayLocal(), // ✅ no permite ayer
     });
 
     wireFlatpickr(fechaAdaptativaInput, "fechaAdaptativa", () => {
       // validateAndPaint(false);
+     }, {
+      minDate: todayLocal(), // ✅ no permite ayer
     });
+
 
     // Flatpickr (ocasional multi)
     wireFlatpickrMultiple(fechasOcasionalesInput);
