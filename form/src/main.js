@@ -60,7 +60,7 @@ function prepararDatosParaEnvio(state) {
   }
 
   const adaptativoMismoDia = adaptativoCaeEnTurnoNormal(data);
-  const resumen = calcularResumenServicio(horasMensuales, data.kidsCount, data.feriadosCount, data.turnoAdaptativo, adaptativoMismoDia);
+  const resumen = calcularResumenServicio(horasMensuales, data.kidsCount, data.feriadosCount);
   const totalRaw = resumen.total;
   const total = formatCLP(totalRaw);
   let precioAdaptativo = 0;
@@ -73,6 +73,7 @@ function prepararDatosParaEnvio(state) {
     resumen
   );
 
+  resumen.total = resumen.total + precioAdaptativo;
   return {
     ...data,
     horasMensuales,
@@ -80,7 +81,7 @@ function prepararDatosParaEnvio(state) {
     total,
     precioAdaptativo,
     detalleCobro,      // 👈 envíalo al Apps Script
-    resumenServicio: resumen + precioAdaptativo , // 👈 opcional (por si quieres tabla)
+    resumenServicio: resumen , // 👈 opcional (por si quieres tabla)
   };
 }
 

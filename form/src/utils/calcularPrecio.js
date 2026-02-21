@@ -85,11 +85,8 @@ export function calcularResumenServicio(
   horasMensuales,
   cantidadNinos = 1,
   feriadosCount = 0,
-  turnoAdaptativo,
-  adaptativoMismoDia
 ) {
   let base = calcularPrecioBase(horasMensuales, cantidadNinos);
-  console.log(adaptativoMismoDia);  
   const descuentoPct = obtenerDescuentoPorHoras(horasMensuales);
   const descuentoMonto = base * descuentoPct;
 
