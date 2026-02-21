@@ -80,7 +80,7 @@ function prepararDatosParaEnvio(state) {
     total,
     precioAdaptativo,
     detalleCobro,      // 👈 envíalo al Apps Script
-    resumenServicio: resumen, // 👈 opcional (por si quieres tabla)
+    resumenServicio: resumen + precioAdaptativo , // 👈 opcional (por si quieres tabla)
   };
 }
 

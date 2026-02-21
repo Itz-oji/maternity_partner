@@ -90,12 +90,6 @@ export function calcularResumenServicio(
 ) {
   let base = calcularPrecioBase(horasMensuales, cantidadNinos);
   console.log(adaptativoMismoDia);  
-  if(!adaptativoMismoDia){
-    if(turnoAdaptativo === 'si'){
-      const tarifaAdaptativo = obtenerTarifaHora(cantidadNinos);
-      base = base + ((4 * tarifaAdaptativo) * 0.75);
-    }
-  }
   const descuentoPct = obtenerDescuentoPorHoras(horasMensuales);
   const descuentoMonto = base * descuentoPct;
 
