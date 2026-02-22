@@ -116,6 +116,23 @@
       </div>
     </div>
 
+    <div class="field" id="horaAdaptativaWrap" style="display:none;">
+      <label>Horario del turno adaptativo <span class="req">*</span></label>
+
+      <div class="ocasional-times">
+        <div class="col">
+          <label>Hora inicio <span class="req">*</span></label>
+          <input id="horaAdaptativaInicio" class="input js-adaptativo-inicio" type="time" />
+        </div>
+
+        <div class="col">
+          <label>Hora término <span class="req">*</span></label>
+          <input id="horaAdaptativaTermino" class="input js-adaptativo-termino" type="time" />
+        </div>
+      </div>
+      <div class="turno-error" id="adaptativoHoraError"></div>
+    </div>
+
     <div id="adaptativoWarning" class="warn-box" hidden>
       <strong>Turno adaptativo</strong>
       <div class="warn-text">

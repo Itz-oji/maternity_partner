@@ -32,6 +32,12 @@ export const cotizacionPage = {
     const adaptRadios = [...container.querySelectorAll('input[name="turnoAdaptativo"]')];
     const fechaAdaptativaWrap = container.querySelector("#fechaAdaptativaWrap");
 
+    // --- Horario adaptativo ---
+    const horaAdaptativaWrap = container.querySelector("#horaAdaptativaWrap");
+    const horaAdaptativaInicio = container.querySelector("#horaAdaptativaInicio");
+    const horaAdaptativaTermino = container.querySelector("#horaAdaptativaTermino");
+    const adaptativoHoraError = container.querySelector("#adaptativoHoraError");
+
     // --- Periódico (días + horarios) ---
     const diasHorariosWrap = container.querySelector("#diasHorariosWrap");
     const diaRowTemplate = container.querySelector("#diaRowTemplate");
@@ -838,14 +844,42 @@ export const cotizacionPage = {
     ========================= */
 
     function toggleFechaAdaptativa() {
-      const valor = getField("turnoAdaptativo");
+      const valor = String(getField("turnoAdaptativo") ?? "").toLowerCase();
       const show = valor === "si";
 
+      // fecha
       if (fechaAdaptativaWrap) fechaAdaptativaWrap.style.display = show ? "block" : "none";
 
+      // ✅ horas
+      if (horaAdaptativaWrap) horaAdaptativaWrap.style.display = show ? "block" : "none";
+
+      // ✅ warning adaptativo
+      if (adaptativoWarning) adaptativoWarning.hidden = !show;
+
       if (!show) {
+        // limpiar fecha adaptativa
         updateField("fechaAdaptativa", "");
         if (fechaAdaptativaInput) fechaAdaptativaInput.value = "";
+        const fp = fechaAdaptativaInput?._flatpickr;
+        if (fp) fp.clear();
+
+        // limpiar horas adaptativas
+        updateField("horaAdaptativaInicio", "");
+        updateField("horaAdaptativaTermino", "");
+        if (horaAdaptativaInicio) horaAdaptativaInicio.value = "";
+        if (horaAdaptativaTermino) horaAdaptativaTermino.value = "";
+
+        if (adaptativoHoraError) adaptativoHoraError.textContent = "";
+      } else {
+        // si está visible, revalida el rango (opcional)
+        const ini = horaAdaptativaInicio?.value ?? "";
+        const ter = horaAdaptativaTermino?.value ?? "";
+        if (ini && ter) {
+          const h = diffHours(ini, ter);
+          if (adaptativoHoraError) {
+            adaptativoHoraError.textContent = h == null ? "El turno debe durar al menos 4 horas." : "";
+          }
+        }
       }
     }
 
@@ -914,25 +948,6 @@ export const cotizacionPage = {
       if (checked) checked.closest(".radio-item")?.classList.add("selected");
     }
 
-    function toggleFechaAdaptativa() {
-      const valor = getField("turnoAdaptativo");
-      const show = valor === "si";
-
-      if (fechaAdaptativaWrap) fechaAdaptativaWrap.style.display = show ? "block" : "none";
-
-      // ✅ mostrar/ocultar warning adaptativo
-      if (adaptativoWarning) adaptativoWarning.hidden = !show;
-
-      if (!show) {
-        updateField("fechaAdaptativa", "");
-        if (fechaAdaptativaInput) fechaAdaptativaInput.value = "";
-
-        // (opcional pero recomendado) limpiar flatpickr de fecha adaptativa
-        const fp = fechaAdaptativaInput?._flatpickr;
-        if (fp) fp.clear();
-      }
-    }
-
     /* =========================
        Cargar estado inicial
     ========================= */
@@ -954,6 +969,8 @@ export const cotizacionPage = {
     const turnoAdaptativo = getField("turnoAdaptativo") ?? "";
     const checkedAdapt = adaptRadios.find((r) => r.value === turnoAdaptativo);
     if (checkedAdapt) checkedAdapt.checked = true;
+    if (horaAdaptativaInicio) horaAdaptativaInicio.value = getField("horaAdaptativaInicio") ?? "";
+    if (horaAdaptativaTermino) horaAdaptativaTermino.value = getField("horaAdaptativaTermino") ?? "";
 
     // Flatpickr (1 fecha)
     wireFlatpickr(fechaInicioInput, "fechaInicio", () => {
@@ -1025,8 +1042,45 @@ export const cotizacionPage = {
       r.addEventListener("change", () => {
         updateField("turnoAdaptativo", r.value);
         toggleFechaAdaptativa();
+        validateAdaptativoHorasUI();
         // validateAndPaint();
       });
+    });
+
+    function validateAdaptativoHorasUI() {
+      const turno = String(getField("turnoAdaptativo") ?? "").toLowerCase();
+      if (turno !== "si") {
+        if (adaptativoHoraError) adaptativoHoraError.textContent = "";
+        return;
+      }
+
+      const ini = horaAdaptativaInicio?.value ?? "";
+      const ter = horaAdaptativaTermino?.value ?? "";
+
+      if (!ini || !ter) {
+        if (adaptativoHoraError) adaptativoHoraError.textContent = "";
+        return;
+      }
+
+      const h = diffHours(ini, ter);
+      let msg = "";
+      if (h == null) msg = "El turno debe durar al menos 4 horas.";
+      else if (h > 12) msg = "El turno no puede durar más de 12 horas.";
+
+      if (adaptativoHoraError) adaptativoHoraError.textContent = msg;
+    }
+
+    horaAdaptativaInicio?.addEventListener("change", (e) => {
+      updateField("horaAdaptativaInicio", e.target.value);
+      validateAdaptativoHorasUI();
+      // si quieres que afecte totales o warning nocturno, podrías llamar acá:
+      // updateNocturnoWarning();
+    });
+
+    horaAdaptativaTermino?.addEventListener("change", (e) => {
+      updateField("horaAdaptativaTermino", e.target.value);
+      validateAdaptativoHorasUI();
+      // updateNocturnoWarning();
     });
   },
 
@@ -1042,10 +1096,33 @@ export const cotizacionPage = {
     const turnoOk = required(turno);
     const fechaAdaptOk = (turno !== "si") || required(getField("fechaAdaptativa"));
 
+    const horaAdaptIniOk = (turno !== "si") || required(getField("horaAdaptativaInicio"));
+    const horaAdaptTerOk = (turno !== "si") || required(getField("horaAdaptativaTermino"));
+
     // ✅ Fecha inicio SOLO si es periódico
     const fechaInicioOk = (tipo !== "periodico") || required(getField("fechaInicio"));
 
-    const baseOk = comunaOk && dirOk && transpOk && tipoOk && fechaInicioOk && turnoOk && fechaAdaptOk;
+    const timeToMinutesA = (hhmm) => {
+      if (!hhmm || typeof hhmm !== "string") return null;
+      const [h, m] = hhmm.split(":").map(Number);
+      if (!Number.isFinite(h) || !Number.isFinite(m)) return null;
+      return h * 60 + m;
+    };
+
+    const diffHoursMinMaxA = (inicio, termino) => {
+      const a = timeToMinutesA(inicio);
+      const b = timeToMinutesA(termino);
+      if (a == null || b == null) return null;
+      let diffMin = b - a;
+      if (diffMin <= 0) diffMin += 24 * 60;
+      const hours = diffMin / 60;
+      if (hours < 4) return null;
+      if (hours > 12) return null;
+      return hours;
+    };
+
+    const diffAdaptOk = (turno !== "si") || (diffHoursMinMaxA(String(getField("horaAdaptativaInicio") || ""), String(getField("horaAdaptativaTermino") || "")) != null);
+    const baseOk = comunaOk && dirOk && transpOk && tipoOk && fechaInicioOk && turnoOk && fechaAdaptOk && horaAdaptIniOk && horaAdaptTerOk && diffAdaptOk;
     if (!baseOk) return false;
 
     if (tipo === "periodico") {
