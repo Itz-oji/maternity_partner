@@ -24,7 +24,7 @@ function timeToMinutes(hhmm) {
   return h * 60 + m;
 }
 
-function diffHours(inicio, termino) {
+export function diffHours(inicio, termino) {
   const a = timeToMinutes(inicio);
   const b = timeToMinutes(termino);
   if (a == null || b == null) return null;

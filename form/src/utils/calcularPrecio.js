@@ -76,9 +76,9 @@ export function calcularTotalServicio(horasMensuales, cantidadNinos = 1, feriado
   const total = baseConDescuento + feriados * RECARGO_FERIADO_POR_DIA;
   return Math.round(total);
 }
-export function calcularTurnoAdaptativo( cantidadNinos){
+export function calcularTurnoAdaptativo(cantidadNinos, horasAdaptativo){
   const tarifaAdaptativo = obtenerTarifaHora(cantidadNinos);
-  return ((4*tarifaAdaptativo)*0.75)
+  return ((horasAdaptativo*tarifaAdaptativo)*0.75)
 }
 
 export function calcularResumenServicio(

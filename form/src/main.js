@@ -2,7 +2,7 @@ import { pages } from "./pages.js";
 import { getState } from "./store.js";
 import { canGoBack, canGoNext, getCurrentPage, getPageCount, getPageIndex, go } from "./router.js";
 import * as V from "./validators.js";
-import { calcularHorasMensuales, calcularHorasMensualesOcasional } from "./utils/calculoHoras.js";
+import { calcularHorasMensuales, calcularHorasMensualesOcasional, diffHours } from "./utils/calculoHoras.js";
 import { calcularResumenServicio,calcularTurnoAdaptativo, calcularTotalServicio, formatCLP, obtenerTarifaHora } from "./utils/calcularPrecio.js";
 import flatpickr from "https://esm.sh/flatpickr@4.6.13";
 import { Spanish } from "https://esm.sh/flatpickr@4.6.13/dist/l10n/es.js";
@@ -64,10 +64,10 @@ function prepararDatosParaEnvio(state) {
   const totalRaw = resumen.total;
   const total = formatCLP(totalRaw);
   let precioAdaptativo = 0;
-  if(!adaptativoMismoDia && data.turnoAdaptativo === 'si'){
-    precioAdaptativo = calcularTurnoAdaptativo(data.kidsCount);
+  if(!adaptativoMismoDia && data.turnoAdaptativo === "si"){
+    const horaAdaptativa = diffHours(data.horaAdaptativaInicio, data.horaAdaptativaTermino);
+    precioAdaptativo = calcularTurnoAdaptativo(data.kidsCount, horaAdaptativa );
   }
-
   const detalleCobro = buildDetalleCobro(
     { horasMensuales, kidsCount: data.kidsCount, feriadosCount: data.feriadosCount },
     resumen
