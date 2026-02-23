@@ -17,7 +17,7 @@ const weekdayMap = {
 
 // ---------- helpers internos ----------
 
-function timeToMinutes(hhmm) {
+export function timeToMinutes(hhmm) {
   if (!hhmm || typeof hhmm !== "string") return null;
   const [h, m] = hhmm.split(":").map(Number);
   if (!Number.isFinite(h) || !Number.isFinite(m)) return null;

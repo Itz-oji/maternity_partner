@@ -3,7 +3,7 @@ import { getState } from "./store.js";
 import { canGoBack, canGoNext, getCurrentPage, getPageCount, getPageIndex, go } from "./router.js";
 import * as V from "./validators.js";
 import { calcularHorasMensuales, calcularHorasMensualesOcasional, diffHours } from "./utils/calculoHoras.js";
-import { calcularResumenServicio,calcularTurnoAdaptativo, calcularTotalServicio, formatCLP, obtenerTarifaHora } from "./utils/calcularPrecio.js";
+import { calcularResumenServicio,calcularTurnoAdaptativo, formatCLP, obtenerTarifaHora, calcularResumenOcasionalPorMes } from "./utils/calcularPrecio.js";
 import flatpickr from "https://esm.sh/flatpickr@4.6.13";
 import { Spanish } from "https://esm.sh/flatpickr@4.6.13/dist/l10n/es.js";
 
@@ -46,42 +46,95 @@ function prepararDatosParaEnvio(state) {
   const data = { ...state.data };
   const tipo = String(data.tipoServicio ?? "").trim().toLowerCase();
 
-  let horasMensuales = 0;
+  let horasTotales = 0;
+
+  // ✅ Siempre calcula tarifa hora para mostrarla en resumen
+  const tarifaHora = obtenerTarifaHora(data.kidsCount);
+
+  // === Resumen base (base/descuento/subtotal/feriados/total) ===
+  let resumen = null;
+  let breakdownMeses = null;
 
   if (tipo === "ocasional") {
+    // parse turnos
     let turnos = data.turnosOcasionales;
     if (!Array.isArray(turnos)) {
       try { turnos = JSON.parse(turnos || "[]"); } catch { turnos = []; }
     }
-    horasMensuales = calcularHorasMensualesOcasional(turnos);
+
+    // horas totales (suma de todos los turnos)
+    horasTotales = calcularHorasMensualesOcasional(turnos);
+
+    // ✅ nuevo: calcular por mes y luego consolidar
+    const resumenMes = calcularResumenOcasionalPorMes(turnos, data.kidsCount, data.feriadosCount);
+    breakdownMeses = resumenMes.meses;
+
+    const base = breakdownMeses.reduce((a, m) => a + (Number(m.base) || 0), 0);
+    const descuentoMonto = breakdownMeses.reduce((a, m) => a + (Number(m.descuentoMonto) || 0), 0);
+    const subtotal = breakdownMeses.reduce((a, m) => a + (Number(m.subtotal) || 0), 0);
+    const feriados = Number(resumenMes.feriados) || 0;
+
+    resumen = {
+      horasTotales,
+      tarifaHora,
+      base: Math.round(base),
+      descuentoPct: null, // 👈 en ocasional no hay un solo % (es por mes)
+      descuentoMonto: Math.round(descuentoMonto),
+      subtotal: Math.round(subtotal),
+      feriados: Math.round(feriados),
+      total: Math.round(subtotal + feriados),
+      meses: breakdownMeses, // 👈 opcional para tabla / PDF
+    };
   } else {
+    // periódico
     const diasHorarios = Array.isArray(data.diasHorarios) ? data.diasHorarios : [];
-    horasMensuales = calcularHorasMensuales(data.fechaInicio, diasHorarios);
+    horasTotales = calcularHorasMensuales(data.fechaInicio, diasHorarios);
+
+    // aquí el descuento siempre aplica por tus reglas
+    resumen = calcularResumenServicio(horasTotales, data.kidsCount, data.feriadosCount, true);
+
+    // normaliza nombres para que el resumen sea igual para todos
+    resumen = {
+      ...resumen,
+      horasTotales,
+      tarifaHora,
+    };
+  }
+  console.log(breakdownMeses)
+  console.log(resumen.descuentoMonto)
+  // === Turno adaptativo (se suma al total) ===
+  const adaptativoMismoDia = adaptativoCaeEnTurnoNormal(data);
+
+  let precioAdaptativo = 0;
+  if (!adaptativoMismoDia && data.turnoAdaptativo === "si") {
+    const horaAdaptativa = diffHours(data.horaAdaptativaInicio, data.horaAdaptativaTermino);
+    precioAdaptativo = calcularTurnoAdaptativo(data.kidsCount, horaAdaptativa);
   }
 
-  const adaptativoMismoDia = adaptativoCaeEnTurnoNormal(data);
-  const resumen = calcularResumenServicio(horasMensuales, data.kidsCount, data.feriadosCount);
-  const totalRaw = resumen.total;
-  const total = formatCLP(totalRaw);
-  let precioAdaptativo = 0;
-  if(!adaptativoMismoDia && data.turnoAdaptativo === "si"){
-    const horaAdaptativa = diffHours(data.horaAdaptativaInicio, data.horaAdaptativaTermino);
-    precioAdaptativo = calcularTurnoAdaptativo(data.kidsCount, horaAdaptativa );
-  }
+  // total final
+  const totalFinal = Math.round((Number(resumen.total) || 0) + (Number(precioAdaptativo) || 0));
+
+  // para UI / envío
+  const total = formatCLP(totalFinal);
+  const totalRaw = totalFinal;
+
+  // ✅ si tu buildDetalleCobro hoy espera "resumen" clásico, te conviene
+  // que use los campos que ya pusimos (base, descuentoMonto, subtotal, feriados, total)
   const detalleCobro = buildDetalleCobro(
-    { horasMensuales, kidsCount: data.kidsCount, feriadosCount: data.feriadosCount },
-    resumen
+    { horasMensuales: horasTotales, kidsCount: data.kidsCount, feriadosCount: data.feriadosCount },
+    { ...resumen, total: totalFinal, precioAdaptativo }
   );
 
-  resumen.total = resumen.total + precioAdaptativo;
   return {
     ...data,
-    horasMensuales,
+    horasMensuales: horasTotales,   // si ya usas este nombre en el resto del flujo
+    valorHora: tarifaHora,          // 👈 para mostrarlo fácil
     totalRaw,
     total,
     precioAdaptativo,
-    detalleCobro,      // 👈 envíalo al Apps Script
-    resumenServicio: resumen , // 👈 opcional (por si quieres tabla)
+    detalleCobro,
+    resumenServicio: { ...resumen, precioAdaptativo, total: totalFinal },
+    resumenPorMes: breakdownMeses ?? null, // 👈 opcional para el Apps Script/PDF
   };
 }
 

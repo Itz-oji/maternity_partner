@@ -283,6 +283,11 @@ export const cotizacionPage = {
       if (!Number.isFinite(h) || !Number.isFinite(m)) return null;
       return h * 60 + m;
     }
+    function endOfNextMonthFromToday() {
+      const now = new Date();
+      // último día del mes siguiente: (año, mes + 2, día 0)
+      return new Date(now.getFullYear(), now.getMonth() + 2, 0, 23, 59, 59, 999);
+    }
 
     // ✅ Regla: sobrecargo si el TURNO TERMINA entre 23:00 y 06:00 (incluye 06:00)
     function endsInNocturnoWindow(termino) {
@@ -520,6 +525,7 @@ export const cotizacionPage = {
         allowInput: false,
         defaultDate: savedDates.length ? savedDates : null,
         minDate: todayLocal(),
+        maxDate: endOfNextMonthFromToday(),
         plugins: [
           yearGridPlugin({
             yearsPerPage: 12,

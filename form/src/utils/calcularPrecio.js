@@ -1,3 +1,5 @@
+import { diffHours} from "./calculoHoras.js";
+
 export const TARIFA_HORA_POR_NINOS = {
   1: 10000,
   2: 15000,
@@ -16,17 +18,16 @@ export const DESCUENTOS_POR_HORAS = [
   { min: 32,  descuento: 0.10 },
 ];
 
-export function obtenerDescuentoPorHoras(horasMensuales = 0) {
+export function obtenerDescuentoPorHoras(horasMensuales = 0, habilitado = true) {
   const h = Number(horasMensuales) || 0;
+  if (!habilitado) return 0;
 
   for (const tramo of DESCUENTOS_POR_HORAS) {
-    if (h >= tramo.min) {
-      return tramo.descuento; // ej: 0.10 = 10%
-    }
+    if (h >= tramo.min) return tramo.descuento;
   }
-
   return 0;
 }
+
 
 export const RECARGO_FERIADO_POR_DIA = 15000;
 
@@ -85,9 +86,11 @@ export function calcularResumenServicio(
   horasMensuales,
   cantidadNinos = 1,
   feriadosCount = 0,
+  descuentoHabilitado = true
 ) {
   let base = calcularPrecioBase(horasMensuales, cantidadNinos);
-  const descuentoPct = obtenerDescuentoPorHoras(horasMensuales);
+
+  const descuentoPct = obtenerDescuentoPorHoras(horasMensuales, descuentoHabilitado);
   const descuentoMonto = base * descuentoPct;
 
   const subtotal = base - descuentoMonto;
@@ -104,3 +107,72 @@ export function calcularResumenServicio(
     total: Math.round(total),
   };
 }
+
+export function calcularResumenOcasionalPorMes(turnos, cantidadNinos = 1, feriadosCount = 0) {
+  const tarifa = obtenerTarifaHora(cantidadNinos);
+
+  // agrupar horas por mes
+  const horasPorMes = new Map(); // "YYYY-MM" -> horas
+
+  for (const t of (Array.isArray(turnos) ? turnos : [])) {
+    const d = toDateSafe(t?.date ?? t?.fecha ?? null);
+    if (!d) continue;
+
+    const h = diffHours(t?.inicio ?? "", t?.termino ?? "");
+    if (h == null) continue;
+
+    const key = monthKey(d);
+    horasPorMes.set(key, (horasPorMes.get(key) || 0) + h);
+  }
+
+  const meses = [...horasPorMes.entries()]
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([month, horasRaw]) => {
+      const horas = Math.round(horasRaw * 100) / 100;
+
+      const base = Math.round(horas * tarifa);
+      const descuentoPct = obtenerDescuentoPorHoras(horas, true); // 👈 descuento por horas del mes
+      const descuentoMonto = base * descuentoPct;
+      const subtotal = base - descuentoMonto;
+
+      return {
+        month,
+        horas,
+        base,
+        descuentoPct,
+        descuentoMonto,
+        subtotal: Math.round(subtotal),
+      };
+    });
+
+  const totalSinFeriados = meses.reduce((acc, m) => acc + (Number(m.subtotal) || 0), 0);
+
+  // feriados: si tu recargo es por día y no depende del mes, puedes sumarlo al final:
+  const feriados = (Number(feriadosCount) || 0) * RECARGO_FERIADO_POR_DIA;
+
+  return {
+    meses,
+    totalSinFeriados: Math.round(totalSinFeriados),
+    feriados,
+    total: Math.round(totalSinFeriados + feriados),
+  };
+}
+
+function toDateSafe(input) {
+  if (!input) return null;
+  if (input instanceof Date) return isNaN(input.getTime()) ? null : input;
+
+  const s = String(input).trim();
+  const m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (m) return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]), 12, 0, 0, 0);
+
+  const dt = new Date(s);
+  return isNaN(dt.getTime()) ? null : dt;
+}
+
+function monthKey(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+
+
+
