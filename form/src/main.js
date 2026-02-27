@@ -111,8 +111,14 @@ function prepararDatosParaEnvio(state) {
     precioAdaptativo = calcularTurnoAdaptativo(data.kidsCount, horaAdaptativa);
   }
 
+  let transporte = 0;
+  if(data.transporte === "mas_15"){
+    transporte = 5000;
+  }else{
+    transporte = 2000;
+  }
   // total final
-  const totalFinal = Math.round((Number(resumen.total) || 0) + (Number(precioAdaptativo) || 0));
+  const totalFinal = Math.round((Number(resumen.total) || 0) + (Number(precioAdaptativo) || 0) + (Number(transporte) || 0));
 
   // para UI / envío
   const total = formatCLP(totalFinal);
@@ -122,7 +128,7 @@ function prepararDatosParaEnvio(state) {
   // que use los campos que ya pusimos (base, descuentoMonto, subtotal, feriados, total)
   const detalleCobro = buildDetalleCobro(
     { horasMensuales: horasTotales, kidsCount: data.kidsCount, feriadosCount: data.feriadosCount },
-    { ...resumen, total: totalFinal, precioAdaptativo }
+    { ...resumen, total: totalFinal, precioAdaptativo, transporte}
   );
 
   return {
@@ -131,9 +137,10 @@ function prepararDatosParaEnvio(state) {
     valorHora: tarifaHora,          // 👈 para mostrarlo fácil
     totalRaw,
     total,
+    transporte,
     precioAdaptativo,
     detalleCobro,
-    resumenServicio: { ...resumen, precioAdaptativo, total: totalFinal },
+    resumenServicio: { ...resumen, precioAdaptativo, total: totalFinal, transporte},
     resumenPorMes: breakdownMeses ?? null, // 👈 opcional para el Apps Script/PDF
   };
 }
