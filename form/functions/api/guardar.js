@@ -4,7 +4,7 @@ export async function onRequestPost({ request }) {
     const data = await request.json();
 
     // 2. URL de tu Google Apps Script (la que ya tienes)
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzE-5IjvSyaHLbQH9yIHbqNXS6eEs8tRdfut9pvQ3iTV-TYEEB_0un9WeCTki9DnL6rYA/exec";
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/a/macros/maternitypartner.cl/s/AKfycbwJF3ttIWXe_J1iUtxAK-nJZes1c_sqa1LCO3NdPG6QFze57HpErU7bpKw54mAjY0wT/exec";
     
 
     // 3. Enviar datos a Google (esto ocurre en el servidor, sin CORS)
