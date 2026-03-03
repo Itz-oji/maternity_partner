@@ -100,8 +100,6 @@ function prepararDatosParaEnvio(state) {
       tarifaHora,
     };
   }
-  console.log(breakdownMeses)
-  console.log(resumen.descuentoMonto)
   // === Turno adaptativo (se suma al total) ===
   const adaptativoMismoDia = adaptativoCaeEnTurnoNormal(data);
 
