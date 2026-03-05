@@ -1,5 +1,5 @@
 import { pages } from "./pages.js";
-import { getState } from "./store.js";
+import { getState, getField } from "./store.js";
 import { canGoBack, canGoNext, getCurrentPage, getPageCount, getPageIndex, go } from "./router.js";
 import * as V from "./validators.js";
 import { calcularHorasMensuales, calcularHorasMensualesOcasional, diffHours, calcularTurnosMensuales } from "./utils/calculoHoras.js";
@@ -62,11 +62,10 @@ function prepararDatosParaEnvio(state) {
     if (!Array.isArray(turnos)) {
       try { turnos = JSON.parse(turnos || "[]"); } catch { turnos = []; }
     }
-
+    
     // horas totales (suma de todos los turnos)
     horasTotales = calcularHorasMensualesOcasional(turnos);
-
-    // ✅ nuevo: calcular por mes y luego consolidar
+    
     const resumenMes = calcularResumenOcasionalPorMes(turnos, data.kidsCount, data.feriadosCount);
     breakdownMeses = resumenMes.meses;
 
