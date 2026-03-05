@@ -117,3 +117,39 @@ export function calcularHorasMensualesOcasional(turnos) {
   }
   return Math.round(sum * 100) / 100;
 }
+
+export function calcularTurnosMensuales(fechaInicio, diasHorarios) {
+  if (!fechaInicio || !Array.isArray(diasHorarios) || !diasHorarios.length) {
+    return 0;
+  }
+
+  const base = new Date(fechaInicio + "T00:00:00");
+  const year = base.getFullYear();
+  const month0 = base.getMonth();
+  const startDay = base.getDate();
+
+  let totalTurnos = 0;
+
+  for (const r of diasHorarios) {
+    const weekday = normalizeWeekdayValue(r.dia);
+
+    // Si quieres contar turno aunque falte horario, deja esto así.
+    // Si prefieres exigir horario válido, descomenta la validación de abajo.
+    if (!weekday) continue;
+
+    // Opcional: exigir que exista un turno “bien armado” (inicio/termino válidos)
+    // const horasDia = diffHours(r.inicio, r.termino);
+    // if (horasDia == null) continue;
+
+    const ocurrencias = countWeekdayInMonthFromDay(
+      year,
+      month0,
+      weekday,
+      startDay
+    );
+
+    totalTurnos += ocurrencias; // <- aquí cuenta turnos, no horas
+  }
+
+  return totalTurnos;
+}

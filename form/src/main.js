@@ -2,7 +2,7 @@ import { pages } from "./pages.js";
 import { getState } from "./store.js";
 import { canGoBack, canGoNext, getCurrentPage, getPageCount, getPageIndex, go } from "./router.js";
 import * as V from "./validators.js";
-import { calcularHorasMensuales, calcularHorasMensualesOcasional, diffHours } from "./utils/calculoHoras.js";
+import { calcularHorasMensuales, calcularHorasMensualesOcasional, diffHours, calcularTurnosMensuales } from "./utils/calculoHoras.js";
 import { calcularResumenServicio,calcularTurnoAdaptativo, formatCLP, obtenerTarifaHora, calcularResumenOcasionalPorMes } from "./utils/calcularPrecio.js";
 import flatpickr from "https://esm.sh/flatpickr@4.6.13";
 import { Spanish } from "https://esm.sh/flatpickr@4.6.13/dist/l10n/es.js";
@@ -54,10 +54,11 @@ function prepararDatosParaEnvio(state) {
   // === Resumen base (base/descuento/subtotal/feriados/total) ===
   let resumen = null;
   let breakdownMeses = null;
-
+  let cantidadTurnos = 0;
   if (tipo === "ocasional") {
     // parse turnos
     let turnos = data.turnosOcasionales;
+    cantidadTurnos = turnos.length;
     if (!Array.isArray(turnos)) {
       try { turnos = JSON.parse(turnos || "[]"); } catch { turnos = []; }
     }
@@ -88,11 +89,12 @@ function prepararDatosParaEnvio(state) {
   } else {
     // periódico
     const diasHorarios = Array.isArray(data.diasHorarios) ? data.diasHorarios : [];
+    cantidadTurnos = calcularTurnosMensuales(data.fechaInicio, diasHorarios);
     horasTotales = calcularHorasMensuales(data.fechaInicio, diasHorarios);
-
+    
     // aquí el descuento siempre aplica por tus reglas
     resumen = calcularResumenServicio(horasTotales, data.kidsCount, data.feriadosCount, true);
-
+    
     // normaliza nombres para que el resumen sea igual para todos
     resumen = {
       ...resumen,
@@ -102,11 +104,13 @@ function prepararDatosParaEnvio(state) {
   }
   // === Turno adaptativo (se suma al total) ===
   const adaptativoMismoDia = adaptativoCaeEnTurnoNormal(data);
-
+  
   let precioAdaptativo = 0;
+  let horaAdaptativa = 0;
   if (!adaptativoMismoDia && data.turnoAdaptativo === "si") {
-    const horaAdaptativa = diffHours(data.horaAdaptativaInicio, data.horaAdaptativaTermino);
+    horaAdaptativa = diffHours(data.horaAdaptativaInicio, data.horaAdaptativaTermino);
     precioAdaptativo = calcularTurnoAdaptativo(data.kidsCount, horaAdaptativa);
+    cantidadTurnos = cantidadTurnos + 1
   }
 
   let transporte = 0;
@@ -115,6 +119,8 @@ function prepararDatosParaEnvio(state) {
   }else{
     transporte = 2000;
   }
+
+  transporte = transporte * cantidadTurnos;
   // total final
   const totalFinal = Math.round((Number(resumen.total) || 0) + (Number(precioAdaptativo) || 0) + (Number(transporte) || 0));
 
